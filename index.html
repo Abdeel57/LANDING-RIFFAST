@@ -94,7 +94,7 @@ body{margin:0;background:var(--dia);color:var(--tinta);font:400 17px/1.5 var(--f
 img,svg{display:block;max-width:100%}
 img{-webkit-user-drag:none;-webkit-touch-callout:none}
 /* Las maquetas y controles no se seleccionan ni abren menús al mantener presionado */
-.phone,.wall,.reels,.tkt-wrap,.up,.notif,.ay-24,.ay-time,.paso-vis,.btn,.maq-btn,.cl-link,.replay,.faq summary,.dock,.calc-top,.calc-out{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+.phone,.wall,.notif,.ay-24,.ay-time,.paso-vis,.btn,.cl-link,.replay,.faq summary,.dock,.calc-top,.calc-out{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 input{font-size:max(16px,1em)}
 a{color:inherit}
 button,input{font:inherit;color:inherit}
@@ -324,14 +324,18 @@ html.riffast-intro-active,html.riffast-intro-active body{overflow:hidden}
    03 FUNCIONES · mosaico
    ====================================================== */
 .bento{display:grid;gap:16px;margin-top:clamp(40px,6vw,72px)}
-.card{position:relative;overflow:hidden;isolation:isolate;min-height:520px;padding:clamp(26px,3vw,38px);border-radius:32px;background:var(--dia)}
+/* Cada tarjeta: texto arriba y un celular con una pantalla real que asoma por abajo */
+.card{position:relative;overflow:hidden;isolation:isolate;display:flex;flex-direction:column;padding:clamp(26px,3vw,38px) clamp(26px,3vw,38px) 0;border-radius:32px;background:var(--dia)}
 .card h3{margin:0;font:800 clamp(27px,2.6vw,36px)/1.02 var(--f-display);font-stretch:104%;letter-spacing:-.035em;text-wrap:balance;max-width:14ch}
 .card p{margin:10px 0 0;font-size:16.5px;line-height:1.45;color:var(--gris);max-width:30ch}
 .card.noche p{color:var(--gris-n)}
+/* Solo asoma la parte de arriba del celular; si la tarjeta crece (misma fila), el área crece con ella */
+.card-ph{flex:1 0 auto;display:flex;justify-content:center;align-items:flex-start;height:clamp(300px,84vw,350px);margin-top:24px;overflow:hidden}
+.card .phone{--w:clamp(240px,64vw,296px)}
 @media(min-width:900px){
   .bento{grid-template-columns:repeat(12,minmax(0,1fr))}
   .ca{grid-column:span 7}.cb{grid-column:span 5}.cc{grid-column:span 5}.cd{grid-column:span 7}
-  .card{min-height:580px}
+  .card-ph{height:420px}
 }
 .replay{display:inline-flex;align-items:center;gap:7px;margin-top:16px;padding:9px 14px;border-radius:99px;border:1px solid var(--linea-n);background:transparent;color:var(--gris-n);font:500 13.5px/1 var(--f-body);opacity:0;pointer-events:none;transition:opacity .4s,color .2s,border-color .2s}
 .replay.show{opacity:1;pointer-events:auto}
@@ -340,8 +344,7 @@ html.riffast-intro-active,html.riffast-intro-active body{overflow:hidden}
 .replay.lt:hover{color:var(--tinta);border-color:rgba(10,25,18,.3)}
 .replay svg{width:14px;height:14px}
 
-/* A · eligen su número */
-.ca .phone{--w:clamp(244px,64vw,296px);position:absolute;left:50%;top:clamp(176px,31%,206px);translate:-50% 0}
+/* A · eligen su número (interactivo, copia fiel del real) */
 .bx-panel{flex:none;background:#0B0B0C;padding:3.4cqw 4cqw 3.8cqw;display:flex;flex-direction:column;align-items:center;gap:2.4cqw;border-bottom:1.2cqw solid var(--verde)}
 .bx-btn{width:100%;border:0;border-radius:3.4cqw;background:#1FA64A;color:#fff;font:800 4.4cqw/1 var(--f-body);padding:3.6cqw;letter-spacing:.02em;text-transform:uppercase;opacity:.4;transition:opacity .3s,box-shadow .3s}
 .bx-btn.ok{opacity:1;box-shadow:0 0 6cqw -1cqw rgba(16,198,95,.9)}
@@ -355,67 +358,15 @@ html.riffast-intro-active,html.riffast-intro-active body{overflow:hidden}
 .bx-grid .tk.tapped{animation:tapPulse .5s var(--ease)}
 @keyframes tapPulse{50%{transform:scale(.9)}}
 
-/* B · maquinita */
+/* B · maquinita · C · comprobante · D · boleto digital: capturas reales del sistema */
 .cb{background:radial-gradient(90% 60% at 80% 100%,rgba(16,198,95,.22),transparent 70%),var(--noche)}
-.maq{position:absolute;left:clamp(26px,3vw,38px);right:clamp(26px,3vw,38px);bottom:clamp(26px,3vw,38px);display:flex;flex-direction:column;gap:16px}
-.reels{display:flex;gap:8px;padding:12px;border-radius:22px;background:linear-gradient(#06100B,#0D2117);box-shadow:inset 0 2px 14px rgba(0,0,0,.7),0 0 0 1px rgba(255,255,255,.07)}
-.reel{position:relative;flex:1;min-width:0;height:78px;overflow:hidden;border-radius:12px;background:#F6FAF8;box-shadow:inset 0 12px 14px -8px rgba(0,0,0,.4),inset 0 -12px 14px -8px rgba(0,0,0,.4)}
-.strip{display:flex;flex-direction:column;will-change:transform}
-.strip span{height:78px;display:grid;place-items:center;font:600 clamp(32px,4vw,44px)/1 var(--f-mono);color:var(--tinta)}
-.maq-btn{border:0;border-radius:18px;padding:19px 18px;font:800 15px/1 var(--f-body);letter-spacing:.05em;text-transform:uppercase;color:#141414;background:linear-gradient(100deg,#C3A8FF,#FF9EC4 25%,#FFC47C 50%,#FFF07A 72%,#86EEDF 100%);background-size:180% 100%;box-shadow:0 0 0 2px var(--verde),0 14px 40px -12px rgba(255,170,120,.7),0 -8px 30px -14px rgba(160,140,255,.7);animation:iri 6s ease-in-out infinite alternate;transition:transform .2s var(--ease)}
-.maq-btn:hover{transform:translateY(-2px)}
-.maq-btn:active{transform:scale(.98)}
-.maq-btn:disabled{cursor:progress}
-@keyframes iri{to{background-position:100% 0}}
-.maq-res{margin:0;min-height:22px;font:500 15px/1.4 var(--f-body);color:var(--gris-n)}
-.maq-res b{color:#fff;font-family:var(--f-mono);font-weight:600}
-
-/* C · comprobante */
-.up{position:absolute;left:50%;bottom:0;translate:-50% 0;width:min(330px,86%);padding:18px 18px 28px;border-radius:26px 26px 0 0;background:#fff;box-shadow:0 -20px 60px -30px rgba(10,25,18,.35),0 0 0 1px var(--linea)}
 .cc{background:linear-gradient(180deg,#fff,#F6F9F7)}
-.up-h{display:flex;justify-content:space-between;align-items:center;gap:8px;font:800 11.5px/1 var(--f-body);letter-spacing:.06em;text-transform:uppercase;color:var(--verde-2)}
-.up-h .mono{font-weight:500;color:var(--gris);letter-spacing:0}
-.up-zone{position:relative;margin-top:14px;height:154px;border:2px dashed #BFE9D0;border-radius:18px;background:#F4FBF7;display:grid;place-items:center;overflow:hidden;transition:border-color .4s,background .4s}
-.up-ph{font:500 13.5px/1.3 var(--f-body);color:var(--gris);transition:opacity .3s}
-.rcpt{position:absolute;left:18%;right:18%;top:14px;padding:11px 12px;border-radius:10px;background:#fff;box-shadow:0 14px 30px -10px rgba(10,25,18,.35),0 0 0 1px var(--linea);font-size:10.5px;line-height:1.3;transform:translateY(-190px) rotate(-6deg);transition:transform .9s var(--spring)}
-.rcpt-h{display:flex;align-items:center;gap:6px;font-weight:600;color:var(--gris)}
-.rcpt-h i{width:12px;height:12px;border-radius:3px;background:var(--bosque)}
-.rcpt-amt{margin:6px 0 5px;font:800 20px/1 var(--f-display);font-stretch:108%;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
-.rcpt-l{display:flex;justify-content:space-between;gap:6px;color:var(--gris)}
-.rcpt-l b{color:var(--tinta);font-weight:600;font-family:var(--f-mono);font-size:9.5px}
-.rcpt-bars{margin-top:7px;height:14px;background:repeating-linear-gradient(90deg,#0A1912 0 2px,transparent 2px 4px,#0A1912 4px 5px,transparent 5px 8px)}
-.up-bar{margin-top:14px;height:6px;border-radius:99px;background:#E4EBE7;overflow:hidden}
-.up-bar i{display:block;height:100%;width:100%;transform-origin:left;transform:scaleX(0);background:var(--verde);transition:transform 1.3s var(--ease)}
-.up-st{margin-top:12px;display:flex;align-items:center;gap:8px;min-height:22px;font:600 14.5px/1.2 var(--f-body);color:var(--gris)}
-.up-st svg{width:20px;height:20px;flex:none}
-.up.s1 .rcpt{transform:none}
-.up.s1 .up-ph{opacity:0}
-.up.s1 .up-zone{border-color:var(--verde)}
-.up.s2 .up-bar i{transform:scaleX(1)}
-.up.s3 .up-st{color:var(--verde-2)}
-
-/* D · boleto digital */
 .cd{background:linear-gradient(160deg,#DFF6E8 0%,#fff 62%)}
-.tkt-wrap{position:absolute;left:clamp(22px,3vw,38px);right:clamp(22px,3vw,38px);bottom:clamp(30px,4vw,52px);filter:drop-shadow(0 26px 30px rgba(10,25,18,.2)) drop-shadow(0 2px 3px rgba(10,25,18,.08))}
-.tkt{--stub:clamp(118px,30%,178px);position:relative;display:flex;border-radius:22px;background:#fff;overflow:hidden;
-  transform:perspective(1000px) rotateX(var(--tx,0deg)) rotateY(var(--ty,0deg));transition:transform .5s var(--ease);
-  -webkit-mask:radial-gradient(circle 12px at calc(100% - var(--stub)) 0,#0000 98%,#000) top/100% 51% no-repeat,radial-gradient(circle 12px at calc(100% - var(--stub)) 100%,#0000 98%,#000) bottom/100% 51% no-repeat;
-  mask:radial-gradient(circle 12px at calc(100% - var(--stub)) 0,#0000 98%,#000) top/100% 51% no-repeat,radial-gradient(circle 12px at calc(100% - var(--stub)) 100%,#0000 98%,#000) bottom/100% 51% no-repeat}
-.tkt::after{content:'';position:absolute;inset:0;pointer-events:none;background:linear-gradient(110deg,transparent 30%,rgba(255,255,255,.75) 44%,rgba(141,247,188,.35) 50%,transparent 62%);transform:translateX(-110%);mix-blend-mode:soft-light}
-.tkt.sweep::after{animation:sweep 1.6s var(--ease)}
-@keyframes sweep{to{transform:translateX(110%)}}
-.tkt-main{flex:1;min-width:0;padding:20px 22px 22px}
-.tkt-top{display:flex;justify-content:space-between;align-items:center;gap:8px;font:500 11px/1 var(--f-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--gris)}
-.tkt-paid{background:#E3F7EC;color:var(--verde-2);padding:5px 8px;border-radius:99px;font-weight:600}
-.tkt-num{margin-top:16px;font:800 clamp(46px,11.5vw,86px)/.86 var(--f-display);font-stretch:104%;letter-spacing:-.045em;font-variant-numeric:tabular-nums}
-@media(min-width:720px){.tkt-num{font-stretch:118%}}
-.tkt-who{margin-top:12px;font:600 15px/1.3 var(--f-body)}
-.tkt-rifa{font:400 12.5px/1.3 var(--f-mono);color:var(--gris)}
-.tkt-stub{flex:none;width:var(--stub);position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:16px;border-left:2px dashed #CFDAD4;background:#FAFCFB}
-.tkt-qr{width:100%;max-width:104px;color:var(--tinta)}
-.tkt-qr svg{width:100%;height:auto}
-.tkt-ok{display:flex;align-items:center;gap:5px;font:600 12px/1 var(--f-body);color:var(--verde-2)}
-.tkt-ok svg{width:14px;height:14px}
+.sb.mint{background:#EDF7F0;color:var(--tinta)}
+/* El boleto digital baja solo de los datos al QR y regresa (solo mientras está a la vista) */
+.scrolly{animation:scrolly 10s cubic-bezier(.65,0,.35,1) infinite;animation-play-state:paused}
+.cd.live .scrolly{animation-play-state:running}
+@keyframes scrolly{0%,14%{transform:translateY(0)}40%,74%{transform:translateY(-48%)}94%,100%{transform:translateY(0)}}
 
 /* ======================================================
    04 TU RIFA EN TU CELULAR
@@ -664,15 +615,9 @@ html.riffast-intro-active,html.riffast-intro-active body{overflow:hidden}
 }
 @media(max-width:899px){
   .bento{margin-top:26px;gap:12px}
-  .card{min-height:0;padding:24px 22px}
+  .card{padding:24px 22px 0}
   .card p{font-size:16px}
-  .ca{height:440px}
-  .ca .phone{top:132px}
-  .maq,.tkt-wrap{position:relative;left:auto;right:auto;bottom:auto;margin-top:22px}
-  .up{position:relative;left:auto;bottom:auto;translate:none;width:100%;max-width:340px;margin:18px auto -24px}
-  .up-zone{height:128px}
-  .rcpt{top:8px}
-  .card .replay{margin-top:10px}
+  .card-ph{margin-top:20px}
   .precio-grid{margin-top:26px;gap:12px}
   .plan{--py:calc(100% - 136px)}
   .plan-stub{height:136px}
@@ -857,6 +802,7 @@ html.riffast-intro-active,html.riffast-intro-active body{overflow:hidden}
       <article class="card ca" data-rv id="card-bx">
         <h3>Eligen su número</h3>
         <p>Tocan el boleto y queda apartado. Pruébalo.</p>
+        <div class="card-ph">
         <div class="phone" data-proto="prototipo-boletera-eligen-numero">
           <div class="screen">
             <div class="rp" style="--c:#10C65F;--ink:#03120C">
@@ -874,64 +820,40 @@ html.riffast-intro-active,html.riffast-intro-active body{overflow:hidden}
             <i class="island"></i>
           </div>
         </div>
-      </article>
-
-      <!-- B · Maquinita de la suerte (interactivo) -->
-      <article class="card cb noche" data-rv style="--d:80ms" id="card-maq" data-proto="prototipo-maquinita-de-la-suerte">
-        <h3>La maquinita elige por ellos</h3>
-        <p>Un toque y la suerte escoge su número.</p>
-        <div class="maq">
-          <div class="reels" aria-hidden="true">
-            <div class="reel"><div class="strip"></div></div>
-            <div class="reel"><div class="strip"></div></div>
-            <div class="reel"><div class="strip"></div></div>
-            <div class="reel"><div class="strip"></div></div>
-            <div class="reel"><div class="strip"></div></div>
-          </div>
-          <button type="button" class="maq-btn" id="maq-go">Maquinita de la suerte</button>
-          <p class="maq-res" id="maq-res" aria-live="polite">Toca la maquinita.</p>
         </div>
       </article>
 
-      <!-- C · Suben su comprobante -->
-      <article class="card cc" data-rv id="card-up" data-proto="prototipo-subir-comprobante">
+      <!-- B · Maquinita de la suerte: captura real tras girar (eligió 5 boletos solos) -->
+      <article class="card cb noche" data-rv style="--d:80ms" data-proto="captura-real-maquinita-de-la-suerte">
+        <h3>La maquinita elige por ellos</h3>
+        <p>Un toque y la suerte escoge sus números.</p>
+        <div class="card-ph"><div class="phone"><div class="screen">
+          <div class="sb"><span>9:41</span><i><span class="sb-sig"></span><span class="sb-bat"></span></i></div>
+          <div class="shot"><img src="assets/real-maquinita.webp" alt="La maquinita de la suerte eligió 5 boletos y aparece la barra Apartar: 5 boletos, $25" width="1170" height="2355" loading="lazy" decoding="async"></div>
+          <i class="island"></i>
+        </div></div></div>
+      </article>
+
+      <!-- C · Suben su comprobante: captura real de la billetera del comprador -->
+      <article class="card cc" data-rv data-proto="captura-real-subir-comprobante">
         <h3>Suben su comprobante ahí mismo</h3>
         <p>Sin mandarte mensajes. Tú solo confirmas.</p>
-        <button type="button" class="replay lt" data-replay="up"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M13 8a5 5 0 1 1-1.5-3.6M13 2.5v3h-3" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>Repetir</button>
-        <div class="up" id="up" aria-hidden="true">
-          <div class="up-h"><span>Sube tu pago aquí</span><span class="mono">3 boletos</span></div>
-          <div class="up-zone">
-            <span class="up-ph">Toca para subir tu comprobante</span>
-            <div class="rcpt">
-              <div class="rcpt-h"><i></i>Comprobante de pago</div>
-              <div class="rcpt-amt">$300.00</div>
-              <div class="rcpt-l"><span>Boletos</span><b>00023 · 00041 · 00057</b></div>
-              <div class="rcpt-bars"></div>
-            </div>
-          </div>
-          <div class="up-bar"><i></i></div>
-          <div class="up-st" id="up-st">Esperando comprobante</div>
-        </div>
+        <div class="card-ph"><div class="phone"><div class="screen">
+          <div class="sb"><span>9:41</span><i><span class="sb-sig"></span><span class="sb-bat"></span></i></div>
+          <div class="shot"><img src="assets/real-comprobante.webp" alt="Billetera del comprador: comprobante enviado, esperando que el organizador confirme el pago de los boletos 00023, 00041 y 00057" width="1170" height="2355" loading="lazy" decoding="async"></div>
+          <i class="island"></i>
+        </div></div></div>
       </article>
 
-      <!-- D · Boleto digital con QR -->
-      <article class="card cd" data-rv style="--d:80ms" id="card-tkt" data-proto="prototipo-boleto-digital-qr">
+      <!-- D · Boleto digital con QR: captura real, baja sola hasta el QR -->
+      <article class="card cd" data-rv style="--d:80ms" id="card-tkt" data-proto="captura-real-boleto-digital-qr">
         <h3>Boleto digital con QR</h3>
         <p>Cada comprador recibe su boleto verificado.</p>
-        <div class="tkt-wrap">
-          <div class="tkt" id="tkt">
-            <div class="tkt-main">
-              <div class="tkt-top"><span>Boleto digital</span><span class="tkt-paid">Pagado</span></div>
-              <div class="tkt-num">00023</div>
-              <div class="tkt-who">Karla M.</div>
-              <div class="tkt-rifa">Gran Rifa Navideña</div>
-            </div>
-            <div class="tkt-stub">
-              <span class="tkt-qr" data-qr></span>
-              <span class="tkt-ok"><svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="10" fill="#10C65F"/><path d="M6 10.4l2.6 2.6 5.4-5.6" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Verificado</span>
-            </div>
-          </div>
-        </div>
+        <div class="card-ph"><div class="phone"><div class="screen">
+          <div class="sb mint"><span>9:41</span><i><span class="sb-sig"></span><span class="sb-bat"></span></i></div>
+          <div class="shot scrolly"><img src="assets/real-boleto.webp" alt="Boleto digital de Riffast: números 00012 y 00013, pagado, con folio y código QR para el sorteo" width="975" height="3323" loading="lazy" decoding="async"></div>
+          <i class="island"></i>
+        </div></div></div>
       </article>
 
     </div>
@@ -968,7 +890,7 @@ html.riffast-intro-active,html.riffast-intro-active body{overflow:hidden}
         <div class="phone"><div class="screen">
           <div class="adm">
             <div class="sb lt"><span>9:41</span><i><span class="sb-sig"></span><span class="sb-bat"></span></i></div>
-            <img src="assets/admin-ordenes.webp" alt="Panel de Riffast en el celular: órdenes apartadas con el botón Marcar pagado" width="329" height="715" loading="lazy" decoding="async">
+            <img src="assets/admin-ordenes.webp?v=2" alt="Panel de Riffast en el celular: la orden de Karla Mendoza con los boletos 00023, 00041 y 00057, por confirmar, con los botones Comprobante y Marcar pagado" width="1170" height="2355" loading="lazy" decoding="async">
           </div>
           <i class="island"></i>
         </div></div>
@@ -1110,7 +1032,7 @@ html.riffast-intro-active,html.riffast-intro-active body{overflow:hidden}
       </li>
       <li class="paso" data-rv style="--d:180ms" data-proto="paso-3-captura-real-rifa-publicada">
         <div class="paso-vis vender">
-          <img src="assets/admin-rifa-publicada.webp" alt="Panel de Riffast: botón Compartir rifa y la rifa visible en la página" width="305" height="86" loading="lazy" decoding="async">
+          <img src="assets/admin-rifa-publicada.webp?v=2" alt="Panel de Riffast: botón Compartir rifa y la rifa visible en la página" width="1029" height="378" loading="lazy" decoding="async">
           <div class="pv-row pv-g" aria-hidden="true"><i></i><span>3 boletos apartados</span></div>
         </div>
         <div><span class="paso-n">Paso 3</span><h3>La revisas y vendes</h3></div>
@@ -1271,18 +1193,6 @@ html.riffast-intro-active,html.riffast-intro-active body{overflow:hidden}
     $$('[data-rv]').forEach(function (el) { rio.observe(el); });
   }
 
-  /* ---------- QR (decorativo) ---------- */
-  var QR = (function () {
-    var N = 21, cells = [], s = 20230;
-    var rnd = function () { s = (s * 1103515245 + 12345) & 0x7fffffff; return s / 0x7fffffff; };
-    var finder = function (x0, y0) { for (var y = 0; y < 7; y++) for (var x = 0; x < 7; x++) { var edge = x === 0 || y === 0 || x === 6 || y === 6, core = x >= 2 && x <= 4 && y >= 2 && y <= 4; if (edge || core) cells.push([x0 + x, y0 + y]); } };
-    finder(0, 0); finder(N - 7, 0); finder(0, N - 7);
-    var inF = function (x, y) { return (x < 8 && y < 8) || (x >= N - 8 && y < 8) || (x < 8 && y >= N - 8); };
-    for (var y = 0; y < N; y++) for (var x = 0; x < N; x++) if (!inF(x, y) && rnd() < 0.45) cells.push([x, y]);
-    return cells.map(function (c) { return 'M' + c[0] + ' ' + c[1] + 'h1v1h-1z'; }).join('');
-  })();
-  var qrSvg = function () { return '<svg viewBox="0 0 21 21" shape-rendering="crispEdges" aria-hidden="true"><path d="' + QR + '" fill="currentColor"/></svg>'; };
-  $$('[data-qr]').forEach(function (el) { el.innerHTML = qrSvg(); });
 
   /* ======================================================
      01 INICIO · muro de boletos + notificación + ventas
@@ -1449,66 +1359,11 @@ html.riffast-intro-active,html.riffast-intro-active body{overflow:hidden}
     }, 0.45);
   })();
 
-  // B · maquinita de la suerte
+  // D · boleto digital: la pantalla se recorre sola solo mientras la tarjeta está a la vista
   (function () {
-    var strips = $$('#card-maq .strip'), btn = $('#maq-go'), res = $('#maq-res');
-    if (!strips.length) return;
-    var REPS = 4, cur = [0, 0, 0, 2, 3], spinning = false;
-    strips.forEach(function (s, i) {
-      var h = ''; for (var r = 0; r < REPS; r++) for (var d = 0; d < 10; d++) h += '<span>' + d + '</span>';
-      s.innerHTML = h;
-      s.style.transform = 'translateY(' + (-cur[i] * 100 / (REPS * 10)) + '%)';
-    });
-    async function spin() {
-      if (spinning) return;
-      spinning = true; btn.disabled = true; res.textContent = 'Girando…';
-      var num = 1 + Math.floor(Math.random() * 9999), digits = pad(num).split('').map(Number), last = 0;
-      strips.forEach(function (s, i) {
-        s.style.transition = 'none';
-        s.style.transform = 'translateY(' + (-cur[i] * 2.5) + '%)';
-        void s.offsetHeight;
-        var dur = RM ? 0 : 1100 + i * 260; last = dur;
-        s.style.transition = 'transform ' + dur + 'ms cubic-bezier(.12,.72,.18,1)';
-        s.style.transform = 'translateY(' + (-(20 + digits[i]) * 2.5) + '%)';
-      });
-      await wait(last + 120);
-      cur = digits;
-      res.innerHTML = 'Le tocó el <b>' + pad(num) + '</b> · Apartado';
-      spinning = false; btn.disabled = false;
-    }
-    btn.addEventListener('click', spin);
-    onView($('#card-maq'), function () { setTimeout(spin, RM ? 0 : 500); }, 0.5);
-  })();
-
-  // C · comprobante
-  (function () {
-    var up = $('#up'), st = $('#up-st');
-    if (!up) return;
-    async function run() {
-      showReplay('up', false);
-      up.className = 'up'; st.textContent = 'Esperando comprobante';
-      await wait(500); up.classList.add('s1'); st.textContent = 'comprobante.jpg';
-      await wait(900); up.classList.add('s2'); st.textContent = 'Enviando…';
-      await wait(1400); up.classList.add('s3'); st.innerHTML = CHECK + 'Comprobante enviado';
-      showReplay('up');
-    }
-    $$('[data-replay="up"]').forEach(function (b) { b.addEventListener('click', run); });
-    onView($('#card-up'), run, 0.45);
-  })();
-
-  // D · boleto: brillo al entrar e inclinación con el puntero
-  (function () {
-    var card = $('#card-tkt'), tkt = $('#tkt');
-    if (!tkt) return;
-    onView(card, function () { tkt.classList.add('sweep'); }, 0.5);
-    if (RM || !window.matchMedia('(pointer:fine)').matches) return;
-    card.addEventListener('pointermove', function (e) {
-      var r = card.getBoundingClientRect();
-      tkt.style.setProperty('--ty', (((e.clientX - r.left) / r.width - 0.5) * 10).toFixed(2) + 'deg');
-      tkt.style.setProperty('--tx', (-((e.clientY - r.top) / r.height - 0.5) * 8).toFixed(2) + 'deg');
-    });
-    card.addEventListener('pointerleave', function () { tkt.style.setProperty('--ty', '0deg'); tkt.style.setProperty('--tx', '0deg'); });
-    card.addEventListener('pointerenter', function () { tkt.classList.remove('sweep'); void tkt.offsetWidth; tkt.classList.add('sweep'); });
+    var card = $('#card-tkt');
+    if (!card || RM || !('IntersectionObserver' in window)) return;
+    new IntersectionObserver(function (es) { es.forEach(function (e) { card.classList.toggle('live', e.isIntersecting); }); }, { threshold: 0.25 }).observe(card);
   })();
 
   /* ======================================================

@@ -34,7 +34,7 @@
    CONFIGURACIÓN · cambia estos dos valores antes de publicar
    ========================================================= */
 window.RIFFAST = {
-  whatsapp: '5218112345678',   // [POR CONFIRMAR] Tu WhatsApp con lada de país, solo números
+  whatsapp: '526626235329',    // Tu WhatsApp con lada de país (52), solo números
   metaPixelId: ''              // ID del píxel de Meta. Vacío = sin medición
 };
 
@@ -409,29 +409,45 @@ html.riffast-intro-active,html.riffast-intro-active body{overflow:hidden}
 .ay-time{position:absolute;z-index:2;left:0;top:14%;display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border-radius:99px;background:var(--noche);color:#fff;font:500 13.5px/1 var(--f-mono);box-shadow:0 18px 40px -16px rgba(3,18,12,.6)}
 .ay-time svg{width:15px;height:15px;color:var(--menta)}
 @media(min-width:960px){.ay-time{left:4%}}
-.ch{position:absolute;inset:0;display:flex;flex-direction:column;background:#fff;color:var(--tinta);font-family:var(--f-body)}
-.ch .sb{background:#F6F8F7}
-.ch-head{display:flex;align-items:center;gap:3cqw;padding:2cqw 4.4cqw 3.4cqw;background:#F6F8F7;border-bottom:1px solid #E6ECE8}
-.ch-back{font-size:7cqw;line-height:1;color:var(--verde-2)}
-.ch-av{width:10.5cqw;height:10.5cqw;border-radius:50%;background:var(--noche);display:grid;place-items:center;flex:none}
-.ch-av img{width:6.4cqw;height:6.4cqw}
-.ch-head b{display:block;font:700 4cqw/1.15 var(--f-body)}
-.ch-on{display:flex;align-items:center;gap:1.2cqw;font:500 3cqw/1.2 var(--f-body);color:var(--verde-2)}
-.ch-on i{width:1.8cqw;height:1.8cqw;border-radius:50%;background:var(--verde)}
-.ch-body{flex:1;display:flex;flex-direction:column;gap:2.8cqw;padding:4.4cqw 4cqw}
-.msg{max-width:82%;padding:3cqw 3.8cqw;border-radius:4.6cqw;font:400 3.8cqw/1.38 var(--f-body);animation:pop .4s var(--spring) both}
-.msg.bot{align-self:flex-start;background:#EEF2F0;border-bottom-left-radius:1.4cqw}
-.msg.me{align-self:flex-end;background:var(--bosque);color:#fff;border-bottom-right-radius:1.4cqw}
+/* Chat «Asistencia 24 h»: igual al del panel real (hoja sobre el administrador, mismos textos y colores) */
+.ch{--ag:#08804F;--ag-soft:rgba(8,128,79,.1);--ag-line:rgba(8,128,79,.2);--ag-ink:#1D1D1F;--ag-mute:#6E6E73;--ag-fill:#F2F2F7;--ag-rule:#E6E6EB;position:absolute;inset:0;display:flex;flex-direction:column;background:#8E8E93;color:var(--ag-ink);font-family:var(--f-body)}
+.ch .sb{background:transparent;color:#fff}
+.ch-dim{flex:none;height:3.6cqw}
+.ch-sheet{position:relative;flex:1;min-height:0;display:flex;flex-direction:column;border-radius:6cqw 6cqw 0 0;background:#fff;box-shadow:0 -2cqw 6cqw rgba(0,0,0,.18)}
+.ch-grab{position:absolute;left:50%;top:2cqw;width:9cqw;height:1.2cqw;margin-left:-4.5cqw;border-radius:99px;background:#D1D1D6}
+.ch-head{display:flex;align-items:center;gap:3cqw;padding:6cqw 4cqw 3.6cqw;border-bottom:1px solid var(--ag-rule)}
+.ch-av{width:10cqw;height:10cqw;flex:none;border-radius:50%;background:linear-gradient(160deg,#12A96C,var(--ag));display:grid;place-items:center;box-shadow:0 1cqw 3cqw rgba(8,128,79,.35)}
+.ch-av svg{width:5.4cqw;height:5.4cqw}
+.ch-ttl{flex:1;min-width:0}
+.ch-ttl b{display:block;font:600 4.36cqw/1.15 var(--f-body)}
+.ch-ttl small{display:flex;align-items:flex-start;gap:1.4cqw;margin-top:.8cqw;font:400 3.33cqw/1.3 var(--f-body);color:var(--ag-mute)}
+.ch-ttl small i{flex:none;width:1.6cqw;height:1.6cqw;margin-top:1.4cqw;border-radius:50%;background:var(--verde)}
+.ch-btn{flex:none;width:8.4cqw;height:8.4cqw;border-radius:50%;background:var(--ag-fill);display:grid;place-items:center}
+.ch-btn svg{width:4.2cqw;height:4.2cqw}
+.ch-body{flex:1;min-height:0;display:flex;flex-direction:column;gap:2.8cqw;padding:4.4cqw 4cqw;overflow:hidden}
+.ch-welcome{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2.6cqw;text-align:center;transition:opacity .3s}
+.ch-welcome.off{display:none}
+.ch-wi{width:16cqw;height:16cqw;border-radius:50%;background:var(--ag-soft);display:grid;place-items:center;margin-bottom:1cqw}
+.ch-wi svg{width:7.4cqw;height:7.4cqw}
+.ch-welcome b{font:700 5.64cqw/1.15 var(--f-body);letter-spacing:-.01em}
+.ch-welcome p{margin:0;max-width:86%;font:400 3.85cqw/1.4 var(--f-body);color:var(--ag-mute)}
+.ch-chips{display:flex;flex-direction:column;align-items:center;gap:2.4cqw;margin-top:2.4cqw}
+.ch-chips span{padding:2.6cqw 4.4cqw;border-radius:99px;background:var(--ag-soft);box-shadow:inset 0 0 0 1px var(--ag-line);color:var(--ag);font:500 3.85cqw/1.15 var(--f-body)}
+.msg{max-width:82%;padding:3cqw 3.8cqw;border-radius:4.6cqw;font:400 3.85cqw/1.38 var(--f-body);animation:pop .4s var(--spring) both}
+.msg.bot{align-self:flex-start;background:var(--ag-fill);border-bottom-left-radius:1.4cqw}
+.msg.me{align-self:flex-end;background:var(--ag);color:#fff;border-bottom-right-radius:1.4cqw}
 @keyframes pop{from{opacity:0;transform:translateY(3cqw) scale(.94)}}
 .msg-chip{margin-top:2.4cqw;display:flex;align-items:center;gap:2cqw;padding:2.2cqw 3cqw;border-radius:3cqw;background:#fff;font:600 3.3cqw/1.2 var(--f-body)}
 .msg-chip svg{width:4.6cqw;height:4.6cqw;flex:none}
-.typing{align-self:flex-start;display:flex;gap:1.4cqw;padding:3.6cqw 4cqw;border-radius:4.6cqw;border-bottom-left-radius:1.4cqw;background:#EEF2F0;animation:pop .3s var(--ease) both}
-.typing i{width:2cqw;height:2cqw;border-radius:50%;background:#8E9A93;animation:blink 1s infinite}
+.typing{align-self:flex-start;display:flex;gap:1.4cqw;padding:3.6cqw 4cqw;border-radius:4.6cqw;border-bottom-left-radius:1.4cqw;background:var(--ag-fill);animation:pop .3s var(--ease) both}
+.typing i{width:2cqw;height:2cqw;border-radius:50%;background:#8E8E93;animation:blink 1s infinite}
 .typing i:nth-child(2){animation-delay:.2s}.typing i:nth-child(3){animation-delay:.4s}
-.ch-in{display:flex;align-items:center;gap:2.4cqw;padding:3cqw 4cqw 7cqw;border-top:1px solid #E6ECE8}
-.ch-field{flex:1;min-width:0;padding:2.9cqw 4cqw;border:1px solid #DDE3E0;border-radius:99px;font:400 3.6cqw/1.2 var(--f-body);color:#8A968F;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.ch-field.on{color:var(--tinta)}
-.ch-send{width:9.6cqw;height:9.6cqw;flex:none;border-radius:50%;background:var(--bosque);display:grid;place-items:center}
+.ch-in{display:flex;align-items:center;gap:2.6cqw;padding:3cqw 4cqw 7cqw;border-top:1px solid var(--ag-rule)}
+.ch-cam{flex:none;width:6.4cqw;height:6.4cqw;color:#3A3A3C}
+.ch-field{flex:1;min-width:0;padding:3cqw 4.2cqw;border-radius:99px;background:var(--ag-fill);font:400 4.1cqw/1.2 var(--f-body);color:#8E8E93;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ch-field.on{color:var(--ag-ink)}
+.ch-send{width:10cqw;height:10cqw;flex:none;border-radius:50%;background:var(--ag-fill);color:#8E8E93;display:grid;place-items:center;transition:background .2s,color .2s}
+.ch-send.on{background:var(--ag);color:#fff}
 .ch-send svg{width:50%;height:50%}
 
 /* ======================================================
@@ -890,7 +906,7 @@ html.riffast-intro-active,html.riffast-intro-active body{overflow:hidden}
         <div class="phone"><div class="screen">
           <div class="adm">
             <div class="sb lt"><span>9:41</span><i><span class="sb-sig"></span><span class="sb-bat"></span></i></div>
-            <img src="assets/admin-ordenes.webp?v=2" alt="Panel de Riffast en el celular: la orden de Karla Mendoza con los boletos 00023, 00041 y 00057, por confirmar, con los botones Comprobante y Marcar pagado" width="1170" height="2355" loading="lazy" decoding="async">
+            <img src="assets/admin-ordenes.webp?v=3" alt="Panel de Riffast en el celular: la orden de Karla Mendoza con los boletos 00023, 00041 y 00057, por confirmar, que ya subió su comprobante, con el botón Marcar pagado" width="1170" height="2355" loading="lazy" decoding="async">
           </div>
           <i class="island"></i>
         </div></div>
@@ -929,21 +945,33 @@ html.riffast-intro-active,html.riffast-intro-active body{overflow:hidden}
     <div class="ay-stage" id="chat" data-rv style="--d:120ms">
       <span class="ay-24" aria-hidden="true">24</span>
       <span class="ay-time"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M13.5 10.2A6 6 0 0 1 5.8 2.5a6 6 0 1 0 7.7 7.7z" fill="currentColor"/></svg>2:13 a. m.</span>
-      <div class="phone" data-proto="prototipo-panel-chat-ayuda-24h" role="img" aria-label="Chat de ayuda dentro del panel: el rifero pide marcar el boleto 00023 como pagado y el chat lo hace">
+      <!-- Prototipo fiel al chat «Asistencia 24 h» del panel real (mismos textos, colores y accesos) -->
+      <div class="phone" data-proto="prototipo-asistencia-24h-panel" role="img" aria-label="Asistencia 24 horas dentro del panel: el rifero pide marcar el boleto 00023 como pagado y el chat lo hace">
         <div class="screen">
           <div class="ch">
-            <div class="sb lt"><span>2:13</span><i><span class="sb-sig"></span><span class="sb-bat"></span></i></div>
-            <div class="ch-head">
-              <span class="ch-back">‹</span>
-              <span class="ch-av"><img src="assets/clover-riffast.svg" alt=""></span>
-              <span><b>Ayuda 24 horas</b><span class="ch-on"><i></i>En línea</span></span>
-            </div>
-            <div class="ch-body" id="ch-body">
-              <div class="msg bot">Hola. ¿Qué cambio hago en tu rifa?</div>
-            </div>
-            <div class="ch-in">
-              <span class="ch-field" id="ch-field">Escribe un mensaje</span>
-              <span class="ch-send"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V5M5 12l7-7 7 7" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+            <div class="sb"><span>2:13</span><i><span class="sb-sig"></span><span class="sb-bat"></span></i></div>
+            <div class="ch-dim"></div>
+            <div class="ch-sheet">
+              <i class="ch-grab"></i>
+              <div class="ch-head">
+                <span class="ch-av"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 14v-2a8 8 0 0 1 16 0v2" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"/><rect x="3" y="13" width="4.5" height="6.5" rx="1.6" fill="#fff"/><rect x="16.5" y="13" width="4.5" height="6.5" rx="1.6" fill="#fff"/><path d="M19 19.5c0 1.4-1.6 2.2-4.5 2.2" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/></svg></span>
+                <span class="ch-ttl"><b>Asistencia 24 h</b><small><i></i>Dudas y cambios en tu administrador, a cualquier hora</small></span>
+                <span class="ch-btn"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="6" cy="12" r="1.6" fill="#3A3A3C"/><circle cx="12" cy="12" r="1.6" fill="#3A3A3C"/><circle cx="18" cy="12" r="1.6" fill="#3A3A3C"/></svg></span>
+                <span class="ch-btn"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7l10 10M17 7L7 17" fill="none" stroke="#3A3A3C" stroke-width="2" stroke-linecap="round"/></svg></span>
+              </div>
+              <div class="ch-body" id="ch-body">
+                <div class="ch-welcome" id="ch-welcome">
+                  <span class="ch-wi"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 19.5l1.2-3.4A8 8 0 1 1 9 19.3z" fill="none" stroke="#08804F" stroke-width="1.9" stroke-linejoin="round"/></svg></span>
+                  <b>¿En qué te ayudamos?</b>
+                  <p>Escríbenos y te ayudamos con tus dudas o con cambios en tu administrador, a cualquier hora.</p>
+                  <div class="ch-chips"><span>Crear una rifa</span><span>Agregar mis datos de pago</span><span>¿Cómo vendo más boletos?</span><span>Revisar pagos pendientes</span></div>
+                </div>
+              </div>
+              <div class="ch-in">
+                <svg class="ch-cam" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8.5A2.5 2.5 0 0 1 6.5 6H8l1.2-1.8c.2-.3.5-.5.9-.5h3.8c.4 0 .7.2.9.5L16 6h1.5A2.5 2.5 0 0 1 20 8.5v8a2.5 2.5 0 0 1-2.5 2.5h-11A2.5 2.5 0 0 1 4 16.5v-8Z" fill="none" stroke="currentColor" stroke-width="1.7"/><circle cx="12" cy="12.5" r="3.2" fill="none" stroke="currentColor" stroke-width="1.7"/></svg>
+                <span class="ch-field" id="ch-field">Escribe tu mensaje…</span>
+                <span class="ch-send" id="ch-send"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V5M5 12l7-7 7 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+              </div>
             </div>
           </div>
           <i class="island"></i>
@@ -1032,7 +1060,7 @@ html.riffast-intro-active,html.riffast-intro-active body{overflow:hidden}
       </li>
       <li class="paso" data-rv style="--d:180ms" data-proto="paso-3-captura-real-rifa-publicada">
         <div class="paso-vis vender">
-          <img src="assets/admin-rifa-publicada.webp?v=2" alt="Panel de Riffast: botón Compartir rifa y la rifa visible en la página" width="1029" height="378" loading="lazy" decoding="async">
+          <img src="assets/admin-rifa-publicada.webp?v=3" alt="Panel de Riffast: la rifa con su fecha de sorteo y los botones Boletos y Compartir" width="1074" height="306" loading="lazy" decoding="async">
           <div class="pv-row pv-g" aria-hidden="true"><i></i><span>3 boletos apartados</span></div>
         </div>
         <div><span class="paso-n">Paso 3</span><h3>La revisas y vendes</h3></div>
@@ -1095,7 +1123,7 @@ html.riffast-intro-active,html.riffast-intro-active body{overflow:hidden}
       <form class="lead-form" id="lead-form" novalidate>
         <label for="rf-nombre">Nombre de tu rifa</label>
         <input class="nm" id="rf-nombre" name="nombre" type="text" placeholder="Gran Rifa Navideña" autocomplete="off" maxlength="60" enterkeyhint="send">
-        <a class="btn btn-verde btn-lg btn-block" id="wa-cta" href="https://wa.me/" target="_blank" rel="noopener">
+        <a class="btn btn-verde btn-lg btn-block" id="wa-cta" href="https://wa.me/526626235329" target="_blank" rel="noopener">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91C21.95 6.45 17.5 2 12.04 2zm0 18.15c-1.48 0-2.93-.4-4.2-1.15l-.3-.18-3.12.82.83-3.04-.2-.31a8.26 8.26 0 0 1-1.26-4.38c0-4.54 3.7-8.24 8.24-8.24 4.54 0 8.24 3.7 8.24 8.24 0 4.55-3.7 8.24-8.24 8.24zm4.52-6.16c-.25-.12-1.47-.72-1.69-.81-.23-.08-.39-.12-.56.12-.17.25-.64.81-.78.97-.14.17-.29.19-.54.06-.25-.12-1.05-.39-1.99-1.23-.74-.66-1.23-1.47-1.38-1.72-.14-.25-.02-.38.11-.51.11-.11.25-.29.37-.43s.17-.25.25-.41c.08-.17.04-.31-.02-.43s-.56-1.34-.76-1.84c-.2-.48-.41-.42-.56-.43h-.48c-.17 0-.43.06-.66.31-.22.25-.86.85-.86 2.07 0 1.22.89 2.4 1.01 2.56.12.17 1.75 2.67 4.23 3.74.59.26 1.05.41 1.41.52.59.19 1.13.16 1.56.1.48-.07 1.47-.6 1.67-1.18.21-.58.21-1.07.14-1.18s-.22-.16-.47-.28z"/></svg>
           Quiero mi página así
         </a>
@@ -1137,7 +1165,7 @@ html.riffast-intro-active,html.riffast-intro-active body{overflow:hidden}
   <h3>Medición de anuncios</h3>
   <p>Usamos el píxel de Meta y cookies para saber qué anuncio te trajo y mejorar nuestras campañas. Puedes bloquearlos desde la configuración de tu navegador.</p>
   <h3>Tus derechos</h3>
-  <p>Puedes pedir acceso, corrección o cancelación de tus datos, u oponerte a su uso (derechos ARCO). <a id="priv-wa" href="https://wa.me/" target="_blank" rel="noopener">Escríbenos por WhatsApp</a> y lo atendemos.</p>
+  <p>Puedes pedir acceso, corrección o cancelación de tus datos, u oponerte a su uso (derechos ARCO). <a id="priv-wa" href="https://wa.me/526626235329" target="_blank" rel="noopener">Escríbenos por WhatsApp</a> y lo atendemos.</p>
 </dialog>
 
 <!-- Botón fijo: siempre hay un botón a la vista (el del inicio o este) -->
@@ -1399,18 +1427,20 @@ html.riffast-intro-active,html.riffast-intro-active body{overflow:hidden}
      05 AYUDA · chat
      ====================================================== */
   (function () {
-    var stage = $('#chat'), body = $('#ch-body'), field = $('#ch-field');
+    var stage = $('#chat'), body = $('#ch-body'), field = $('#ch-field'), send = $('#ch-send'), welcome = $('#ch-welcome');
     if (!stage) return;
-    var TXT = 'Marca el 00023 como pagado';
+    var TXT = 'Marca el 00023 como pagado', PH = 'Escribe tu mensaje…';
     async function run() {
       showReplay('chat', false);
       $$('[data-dyn]', body).forEach(function (m) { m.remove(); });
-      field.textContent = 'Escribe un mensaje'; field.classList.remove('on');
-      await wait(600);
-      field.classList.add('on');
+      welcome.classList.remove('off');
+      field.textContent = PH; field.classList.remove('on'); send.classList.remove('on');
+      await wait(900);
+      field.classList.add('on'); send.classList.add('on');
       for (var i = 1; i <= TXT.length; i++) { field.textContent = TXT.slice(0, i); await wait(42); }
       await wait(350);
-      field.textContent = 'Escribe un mensaje'; field.classList.remove('on');
+      field.textContent = PH; field.classList.remove('on'); send.classList.remove('on');
+      welcome.classList.add('off');
       body.insertAdjacentHTML('beforeend', '<div class="msg me" data-dyn>' + TXT + '</div>');
       await wait(500);
       body.insertAdjacentHTML('beforeend', '<div class="typing" data-dyn><i></i><i></i><i></i></div>');

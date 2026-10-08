@@ -1,4 +1,4 @@
-/*! Riffast Intro 1.0 — animación de entrada / pantalla de carga
+/*! Riffast Intro 2.0 — animación de entrada / pantalla de carga
  *
  *  INTEGRACIÓN MÍNIMA (pégalo justo después de <body>):
  *
@@ -7,9 +7,14 @@
  *    <script>RiffastIntro.mount({ container: '#riffast-intro' });</script>
  *
  *  El div con estilo inline evita que se vea la web antes de que cargue el script.
- *  La salida se dispara sola con el evento `load` de la página (autoReady: true).
- *  Si el contenido tarda más de 1.95 s, el trébol se queda respirando hasta que
- *  llegue `load` (o hasta `maxWait`). Nunca se repite la introducción.
+ *
+ *  QUÉ SE VE: el nombre sube letra por letra; cada grupo de letras vuela a su lugar y se
+ *  convierte en una hoja del trébol; el trébol se asienta con una luz suave y la pantalla
+ *  verde sube como telón para descubrir la página. Si la página tarda en cargar, el trébol
+ *  respira hasta que llegue ready() (o hasta `maxWait`).
+ *
+ *  Todo se mueve con transform, opacity y filter (Web Animations API), que el navegador
+ *  anima fuera del hilo principal: sigue fluido aunque la página cargue por detrás.
  *
  *  CONTROL MANUAL (SPA, datos propios, fuentes, etc.):
  *
@@ -18,23 +23,25 @@
  *
  *  OPCIONES (todas opcionales):
  *    container      Elemento o selector. Si se omite, se crea un overlay en <body>.
- *    preset         'agil' (v2, cambios decididos con reposos breves) | 'suave' (v1, fases
- *                   encadenadas). Ambas duran ~2.3 s.
- *    background     '#008B5A'   Verde del fondo (se le añade una luz radial muy sutil).
- *    ink            '#DFEFE6'   Blanco matizado de letras y trébol (el reflejo es blanco puro).
+ *    background     '#008B5A'   Verde del fondo.
+ *    ink            '#FFFFFF'   Color de las letras y del trébol.
  *    autoReady      true        Llama a ready() con window 'load'.
- *    minTime        1.95        Momento más temprano (s) en que puede empezar la salida.
- *                               Usa 1.5 para salir justo al formarse el trébol, sin reflejo.
+ *    minTime        0           Momento más temprano (s) en que puede empezar la salida.
+ *                               Nunca sale antes de que el trébol termine de formarse (~1.4 s).
  *    maxWait        10          Segundos máximos de espera antes de salir sí o sí.
  *    reducedMotion  'auto'      'auto' respeta prefers-reduced-motion; true/false lo fuerza.
  *    speed          1           Velocidad de reproducción (útil para revisar la animación).
  *    zIndex         9999
  *    removeOnDone   true        Elimina el overlay del DOM al terminar.
- *    onDone         fn          Callback al terminar. También se emite el evento
- *                               'riffast-intro:done' en document.
+ *    onDone         fn          Callback al terminar.
  *
- *  Mientras la intro está activa, <html> lleva la clase `riffast-intro-active`
- *  (útil para pausar animaciones propias del hero hasta que termine).
+ *  EVENTOS en document:
+ *    'riffast-intro:reveal'   el telón empieza a descubrir la página: buen momento para
+ *                             arrancar las animaciones del inicio.
+ *    'riffast-intro:done'     la intro terminó y ya no está en pantalla.
+ *
+ *  Mientras la intro tapa la página, <html> lleva la clase `riffast-intro-active`
+ *  (se quita en 'riffast-intro:reveal').
  *
  *  API de la instancia: ready(), replay(), destroy(), state ('playing'|'holding'|'exiting'|'done').
  */
@@ -71,92 +78,82 @@
     // hoja inferior derecha con tallo
     'M 335.5 457.764 C 326.109 454.389 306.556 438.603 292.395 422.964 C 270.461 398.74 250.859 366.822 245.96 347.352 C 244.042 339.73 243.928 336.761 244.205 301.352 L 244.5 263.5 247.18 257.782 C 252.645 246.123 263.742 237.519 276.54 235.019 C 286.528 233.069 359.828 234.131 367.5 236.337 C 394.662 244.15 415.064 263.526 424.171 290.158 C 431.547 311.73 426.671 337.267 412.563 350.939 L 409.015 354.378 405.636 350.43 C 395.429 338.505 377.157 338.512 366.157 350.445 C 357.48 359.858 357.81 375.227 366.896 384.906 C 370.913 389.185 370.489 390.219 363.216 393.891 C 346.139 402.511 326.383 402.197 304.75 392.962 C 299.938 390.907 296 389.544 296 389.932 C 296 391.418 313.878 407.972 321.793 413.814 C 326.354 417.18 336.254 422.948 343.793 426.631 C 360.38 434.734 362 436.033 362 441.234 C 362 444.532 361.234 445.93 356.932 450.478 C 349.294 458.555 343.336 460.58 335.5 457.764 Z'
   ];
-  // Cada letra viaja a una hoja. La "primaria" adopta la silueta exacta de la hoja;
-  // las demás se funden dentro de ella (versión reducida de la misma hoja).
-  var PLAN = [
-    { g: 0, glyph: 0, primary: true,  leaf: 0 },            // R  → hoja sup. izq.
-    { g: 1, glyph: 1, primary: false, leaf: 1, dot: true }, // punto de la i
-    { g: 1, glyph: 1, primary: false, leaf: 1 },            // asta de la i
-    { g: 1, glyph: 2, primary: true,  leaf: 1 },            // f  → hoja inf. izq.
-    { g: 2, glyph: 3, primary: false, leaf: 2 },            // f
-    { g: 2, glyph: 4, primary: true,  leaf: 2 },            // a  → hoja sup. der.
-    { g: 3, glyph: 5, primary: false, leaf: 3 },            // s
-    { g: 3, glyph: 6, primary: true,  leaf: 3 }             // t  → hoja inf. der. + tallo
+  // El nombre se arma en 4 grupos; cada grupo vuela a una hoja del trébol y se convierte en ella.
+  // Índices de LETTERS: 0 R · 1 punto de la i · 2 asta de la i · 3 f · 4 f · 5 a · 6 s · 7 t
+  var GROUPS = [
+    { letters: [0], leaf: 0, turn: -16 },      // R     → hoja sup. izq.
+    { letters: [1, 2, 3], leaf: 1, turn: 14 }, // i + f → hoja inf. izq.
+    { letters: [4, 5], leaf: 2, turn: 16 },    // f + a → hoja sup. der.
+    { letters: [6, 7], leaf: 3, turn: -12 }    // s + t → hoja inf. der. con tallo
   ];
-  var VB = { w: 1000, h: 640 };
-  var K = 1.25;                 // tamaño del trébol respecto al nombre
-  var DRIFT = 90;               // cuánto a la izquierda nace el trébol antes del ajuste final
-  var INSET = 0.42;             // reducción de las hojas "absorbidas"
-  var N_OUT = 280, N_HOLE = 64; // puntos de muestreo por contorno
-  var BODY_CENTER = { 3: [338, 310] }; // centro del cuerpo de la hoja con tallo
-  // ---- easings ---------------------------------------------------------------
-  var clamp01 = function (x) { return x < 0 ? 0 : x > 1 ? 1 : x; };
-  var win = function (t, a, b) { return clamp01((t - a) / (b - a)); };
-  var eInOutQuad = function (x) { return x < 0.5 ? 2 * x * x : 1 - Math.pow(-2 * x + 2, 2) / 2; };
-  var eInOutCubic = function (x) { return x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2; };
-  var eInOutQuart = function (x) { return x < 0.5 ? 8 * x * x * x * x : 1 - Math.pow(-2 * x + 2, 4) / 2; };
-  var eInOutQuint = function (x) { return x < 0.5 ? 16 * x * x * x * x * x : 1 - Math.pow(-2 * x + 2, 5) / 2; };
-  var eInOutSine = function (x) { return -(Math.cos(Math.PI * x) - 1) / 2; };
-  var eOutCubic = function (x) { return 1 - Math.pow(1 - x, 3); };
-  var eOutQuart = function (x) { return 1 - Math.pow(1 - x, 4); };
+  var RISE_ORDER = [0, 1, 1, 2, 3, 4, 5, 6]; // turno de cada letra al subir
+  var DOT = 1;                                // el punto de la i cae cuando ya subió el asta
+  var VB = { w: 1000, h: 640 };               // espacio de trabajo
+  var K = 1.3;                                // tamaño del trébol respecto al nombre
+  var PAD = 6;                                // margen del recorte de cada letra (no corta el antialias)
 
-  // ---- líneas de tiempo (segundos). Ambas duran ~2.3 s ----------------------
-  var PRESETS = {
-    // v1 · Suave: fases encadenadas sin pausas, curvas cúbicas
-    suave: {
-      reveal: 0.65, gather: [0.65, 1.32], morph: [0.80, 1.42], absorb: [0.86, 1.46],
-      recenter: [1.26, 1.54], shine: [1.50, 1.95],
-      exitAt: 1.95, exitDur: 0.35, exitScale: 0.9, stagger: 0.025, rise: 10, smooth: 9,
-      ease: { reveal: eInOutQuad, riseE: eOutCubic, move: eInOutCubic, shape: eInOutCubic, recenter: eInOutSine, shine: eInOutSine, exit: eInOutCubic }
-    },
-    // v2 · Ágil: misma duración total; cada cambio es más decidido (curvas quínticas)
-    // y entre fases hay reposos breves que hacen legible cada estado
-    agil: {
-      reveal: 0.52, gather: [0.60, 1.02], morph: [0.68, 1.14], absorb: [0.70, 1.16],
-      recenter: [1.00, 1.24], shine: [1.30, 1.80],
-      exitAt: 1.95, exitDur: 0.32, exitScale: 0.9, stagger: 0.012, rise: 12, smooth: 11,
-      ease: { reveal: eInOutSine, riseE: eOutCubic, move: eInOutQuint, shape: eInOutQuint, recenter: eInOutQuint, shine: eInOutSine, exit: eInOutQuart }
-    }
+  // ---- línea de tiempo (s) -----------------------------------------------------
+  var TL = {
+    rise: 0.05, riseStep: 0.035, riseDur: 0.6, // el nombre sube letra por letra
+    fly: 0.64, flyStep: 0.05, flyDur: 0.64,    // cada grupo vuela y se vuelve hoja
+    glow: 0.92, ring: 1.22,                    // luz detrás del trébol y un pulso al cerrarse
+    formed: 1.42,                              // trébol completo: antes de esto nunca sale
+    hold: 1.85,                                // si la página no ha cargado, respira
+    reveal: 0.2,                               // ya en la salida, cuándo se avisa a la página
+    exitDur: 0.8
   };
-  var BREATH = { period: 3.2, amp: 0.028 };            // respiración en espera
-  var RM = { fadeIn: 0.3, minHold: 0.7, exitDur: 0.3 }; // alternativa con movimiento reducido
+  var EASE = {
+    rise: 'cubic-bezier(.2,.8,.2,1)',     // la misma curva de los titulares de la página
+    drop: 'cubic-bezier(.34,1.56,.64,1)', // el punto de la i rebota apenas
+    fly: 'cubic-bezier(.65,0,.35,1)',
+    soft: 'cubic-bezier(.2,.8,.2,1)',
+    breathe: 'cubic-bezier(.45,0,.55,1)',
+    lift: 'cubic-bezier(.55,0,.8,.2)',
+    curtain: 'cubic-bezier(.76,0,.24,1)'
+  };
+  var RM = { fadeIn: 0.3, minHold: 0.7, exitDur: 0.35 }; // alternativa con movimiento reducido
   var DEFAULTS = {
-    container: null, preset: 'agil', background: '#008B5A', ink: '#DFEFE6', autoReady: true,
-    minTime: null, maxWait: 10, reducedMotion: 'auto', speed: 1, zIndex: 9999,
+    container: null, background: '#008B5A', ink: '#FFFFFF', autoReady: true,
+    minTime: 0, maxWait: 10, reducedMotion: 'auto', speed: 1, zIndex: 9999,
     removeOnDone: true, onDone: null
   };
 
   // ---- utilidades -----------------------------------------------------------
-  var fmt = function (n) { return Math.round(n * 100) / 100; };
-  var bbox = function (pts) {
-    var b = { minX: Infinity, minY: Infinity, maxX: -Infinity, maxY: -Infinity };
-    for (var i = 0; i < pts.length; i++) { var p = pts[i]; if (p[0] < b.minX) b.minX = p[0]; if (p[0] > b.maxX) b.maxX = p[0]; if (p[1] < b.minY) b.minY = p[1]; if (p[1] > b.maxY) b.maxY = p[1]; }
-    return b;
+  var canAnimate = typeof Element !== 'undefined' && typeof Element.prototype.animate === 'function';
+  var px = function (n) { return (Math.round(n * 100) / 100) + 'px'; };
+  var union = function (a, b) {
+    if (!a) return b;
+    var x = Math.min(a.x, b.x), y = Math.min(a.y, b.y);
+    return { x: x, y: y, w: Math.max(a.x + a.w, b.x + b.w) - x, h: Math.max(a.y + a.h, b.y + b.h) - y };
   };
-  var merge = function (a, b) { return { minX: Math.min(a.minX, b.minX), minY: Math.min(a.minY, b.minY), maxX: Math.max(a.maxX, b.maxX), maxY: Math.max(a.maxY, b.maxY) }; };
-  var center = function (b) { return [(b.minX + b.maxX) / 2, (b.minY + b.maxY) / 2]; };
-  var area = function (pts) { var s = 0; for (var i = 0, n = pts.length; i < n; i++) { var p = pts[i], q = pts[(i + 1) % n]; s += p[0] * q[1] - q[0] * p[1]; } return s / 2; };
-  var flat = function (arrs) { return [].concat.apply([], arrs); };
-  var splitRings = function (d) { return d.trim().split(/(?=M\s)/).map(function (s) { return s.trim(); }).filter(Boolean); };
-  // Rota el contorno origen para que cada punto quede frente al punto más cercano del destino
-  var rotateToFit = function (src, tgt) {
-    var n = src.length, best = Infinity, bestO = 0;
-    for (var o = 0; o < n; o++) {
-      var sum = 0;
-      for (var i = 0; i < n; i++) { var a = src[(i + o) % n], b = tgt[i]; var dx = a[0] - b[0], dy = a[1] - b[1]; sum += dx * dx + dy * dy; if (sum > best) break; }
-      if (sum < best) { best = sum; bestO = o; }
-    }
-    var out = new Array(n);
-    for (var j = 0; j < n; j++) out[j] = src[(j + bestO) % n];
+  var mid = function (b) { return [b.x + b.w / 2, b.y + b.h / 2]; };
+  var div = function (css) { var d = document.createElement('div'); d.style.cssText = css; return d; };
+  var place = function (b, s) { return 'position:absolute;left:' + px(b.x * s) + ';top:' + px(b.y * s) + ';width:' + px(b.w * s) + ';height:' + px(b.h * s) + ';'; };
+  var glyph = function (d, b, ink) {
+    return '<svg xmlns="' + NS + '" viewBox="' + [b.x, b.y, b.w, b.h].join(' ') + '" width="100%" height="100%" style="display:block;overflow:visible" aria-hidden="true" focusable="false">' +
+      '<path d="' + d + '" fill="' + ink + '" fill-rule="evenodd"/></svg>';
+  };
+  // Cajas de los trazados, en coordenadas del logotipo
+  var measure = function (list) {
+    var svg = document.createElementNS(NS, 'svg');
+    svg.setAttribute('width', '10'); svg.setAttribute('height', '10');
+    svg.style.cssText = 'position:absolute;left:-9999px;top:0;width:10px;height:10px;overflow:hidden;pointer-events:none';
+    (document.body || document.documentElement).appendChild(svg);
+    var out = list.map(function (d) {
+      var p = document.createElementNS(NS, 'path'); p.setAttribute('d', d); svg.appendChild(p);
+      var b = p.getBBox(); return { x: b.x, y: b.y, w: b.width, h: b.height };
+    });
+    svg.parentNode.removeChild(svg);
     return out;
   };
-  var boxSmooth = function (xs, ys, h) { // media móvil circular (suma acumulada, O(n))
-    var n = xs.length, px = new Float64Array(3 * n + 1), py = new Float64Array(3 * n + 1);
-    for (var i = 0; i < 3 * n; i++) { px[i + 1] = px[i] + xs[i % n]; py[i + 1] = py[i] + ys[i % n]; }
-    var w = 2 * h + 1, ox = new Array(n), oy = new Array(n);
-    for (var k = 0; k < n; k++) { var a = k + n - h, b = k + n + h + 1; ox[k] = (px[b] - px[a]) / w; oy[k] = (py[b] - py[a]) / w; }
-    return [ox, oy];
+  var scaleOf = function (el) { // escala actual, también a mitad de una animación
+    try {
+      var m = /matrix\(([^)]+)\)/.exec(getComputedStyle(el).transform || '');
+      if (m) { var v = m[1].split(','); return Math.sqrt(v[0] * v[0] + v[1] * v[1]) || 1; }
+    } catch (e) {}
+    return 1;
   };
+  var opacityOf = function (el) { try { var o = parseFloat(getComputedStyle(el).opacity); return isNaN(o) ? 1 : o; } catch (e) { return 1; } };
   var shade = function (hex, amt) { // aclara (>0) u oscurece (<0) un color hex
     var m = /^#?([0-9a-f]{6})$/i.exec(hex.trim());
     if (!m) return hex;
@@ -169,21 +166,16 @@
   // ---- instancia -------------------------------------------------------------
   function Intro(opts) {
     this.o = Object.assign({}, DEFAULTS, opts || {});
-    this.tl = PRESETS[this.o.preset] || PRESETS.agil;
-    if (this.o.minTime == null) this.o.minTime = this.tl.exitAt;
     this.id = 'ri' + (++uid);
     this.state = 'playing';
-    this.t = 0; this.scale = 1; this.isReady = false; this.exitStart = null; this.exitFrom = 1;
-    this.morphing = false; this.settled = false; this.shineOn = false; this.raf = 0;
-    this.rm = this.o.reducedMotion === 'auto'
+    this.isReady = false; this.revealed = false; this.anims = [];
+    this.rm = !canAnimate || (this.o.reducedMotion === 'auto'
       ? !!(global.matchMedia && global.matchMedia('(prefers-reduced-motion: reduce)').matches)
-      : !!this.o.reducedMotion;
-    this._tick = this._tick.bind(this);
+      : !!this.o.reducedMotion);
     this._container();
-    this._geometry();
-    this._dom();
+    this._build();
     document.documentElement.classList.add('riffast-intro-active');
-    this._start();
+    this._play();
     if (this.o.autoReady) {
       if (document.readyState === 'complete') this.ready();
       else global.addEventListener('load', this.ready.bind(this), { once: true });
@@ -202,285 +194,187 @@
     s.position = 'fixed'; s.top = s.right = s.bottom = s.left = '0'; s.zIndex = String(this.o.zIndex);
     s.display = 'flex'; s.alignItems = 'center'; s.justifyContent = 'center'; s.margin = '0'; s.padding = '0';
     s.background = bg;
-    s.background = 'radial-gradient(120% 90% at 50% 46%, ' + shade(bg, 0.06) + ' 0%, ' + bg + ' 52%, ' + shade(bg, -0.1) + ' 100%)';
-    s.opacity = '1'; s.willChange = 'opacity';
+    // Luz tenue al centro; los bordes quedan del verde exacto para que empaten con el telón
+    s.background = 'radial-gradient(120% 70% at 50% 45%, ' + shade(bg, 0.07) + ' 0%, ' + bg + ' 62%)';
+    s.opacity = '1'; s.transform = 'none';
   };
 
-  Intro.prototype._geometry = function () {
-    if (this.rm) return; // la versión de movimiento reducido no morfea
-    var meas = document.createElementNS(NS, 'svg');
-    meas.setAttribute('width', '10'); meas.setAttribute('height', '10');
-    meas.style.cssText = 'position:absolute;left:-9999px;top:0;width:10px;height:10px;overflow:hidden;pointer-events:none';
-    (document.body || document.documentElement).appendChild(meas);
-    var sample = function (d, n) {
-      var p = document.createElementNS(NS, 'path'); p.setAttribute('d', d); meas.appendChild(p);
-      var L = p.getTotalLength(), out = new Array(n);
-      for (var i = 0; i < n; i++) { var q = p.getPointAtLength(L * i / n); out[i] = [q.x, q.y]; }
-      meas.removeChild(p); return out;
-    };
-    var cx = VB.w / 2, cy = VB.h / 2;
-    // Hojas en coordenadas locales del trébol (centro = origen, ya escaladas)
-    var leaves = LEAVES.map(function (d) { return sample(d, N_OUT); });
-    var cb = bbox(flat(leaves)), cc = center(cb);
-    var toLocal = function (p) { return [K * (p[0] - cc[0]), K * (p[1] - cc[1])]; };
-    var leafLocal = leaves.map(function (pts) { return pts.map(toLocal); });
-    var insetLocal = leaves.map(function (pts, i) {
-      var bl = toLocal(BODY_CENTER[i] || center(bbox(pts)));
-      return pts.map(function (p) { var q = toLocal(p); return [bl[0] + INSET * (q[0] - bl[0]), bl[1] + INSET * (q[1] - bl[1])]; });
+  Intro.prototype._build = function () {
+    var self = this, ink = this.o.ink;
+    var vw = global.innerWidth || document.documentElement.clientWidth || 390;
+    var vh = global.innerHeight || document.documentElement.clientHeight || 844;
+    var W = Math.min(Math.max(280, Math.min(0.72 * vw, 1.18 * vh)), 780), s = W / VB.w;
+
+    // Borde inferior curvo del telón (queda fuera de pantalla hasta que sube)
+    this.tailH = Math.round(Math.min(0.12 * vh, 110));
+    this.tail = div('position:absolute;left:0;top:100%;width:100%;margin-top:-1px;height:' + this.tailH + 'px;background:' + this.o.background + ';border-radius:0 0 50% 50% / 0 0 100% 100%;pointer-events:none');
+    this.el.appendChild(this.tail);
+
+    var stage = this.stage = div('position:relative;flex:none;width:' + px(W) + ';height:' + px(VB.h * s) + ';margin-bottom:4vh');
+    var lb = measure(LETTERS), fb = measure(LEAVES);
+    var wc = mid(lb.reduce(union, null)), wo = [VB.w / 2 - wc[0], VB.h / 2 - wc[1]]; // nombre centrado
+    var cc = mid(fb.reduce(union, null));                                              // trébol centrado
+    var toClover = function (b) { return { x: VB.w / 2 + K * (b.x - cc[0]), y: VB.h / 2 + K * (b.y - cc[1]), w: K * b.w, h: K * b.h }; };
+    var cb = toClover(fb.reduce(union, null)), cm = mid(cb), D = Math.max(cb.w, cb.h);
+
+    // Luz detrás del trébol y el pulso que se abre al cerrarse
+    this.glow = div(place({ x: cm[0] - D, y: cm[1] - D, w: 2 * D, h: 2 * D }, s) + 'border-radius:50%;opacity:0;background:radial-gradient(closest-side,rgba(255,255,255,.2),rgba(255,255,255,.06) 55%,rgba(255,255,255,0))');
+    this.ring = div(place({ x: cm[0] - 0.62 * D, y: cm[1] - 0.62 * D, w: 1.24 * D, h: 1.24 * D }, s) + 'box-sizing:border-box;border-radius:50%;opacity:0;border:' + px(Math.max(1.5, 3 * s)) + ' solid rgba(255,255,255,.4)');
+
+    // Trébol: cada hoja es su propia capa, en su lugar final
+    this.clover = div('position:absolute;left:0;top:0;width:100%;height:100%;transform-origin:' + px(cm[0] * s) + ' ' + px(cm[1] * s));
+    this.leaves = LEAVES.map(function (d, j) {
+      var b = toClover(fb[j]), e = div(place(b, s) + (self.rm ? '' : 'opacity:0'));
+      e.innerHTML = glyph(d, fb[j], ink);
+      self.clover.appendChild(e);
+      return { el: e, box: b };
     });
-    this.cloverBox = { minX: cx + K * (cb.minX - cc[0]), maxX: cx + K * (cb.maxX - cc[0]), minY: cy + K * (cb.minY - cc[1]), maxY: cy + K * (cb.maxY - cc[1]) };
-    this.Cfinal = [cx, cy]; this.Cleft = [cx - DRIFT, cy];
-    this.T = 'translate(' + fmt(cx - K * cc[0]) + ' ' + fmt(cy - K * cc[1]) + ') scale(' + K + ')';
-    // Letras: contorno exterior + agujeros (R y a)
-    var rings = LETTERS.map(function (d) { return splitRings(d).map(function (r, i) { return sample(r, i ? N_HOLE : N_OUT); }); });
-    var wb = bbox(flat(rings.map(function (r) { return r[0]; })));
-    this.wb = wb;
-    var wo = [cx - (wb.minX + wb.maxX) / 2, cy - (wb.minY + wb.maxY) / 2];
-    this.wordOffset = wo;
-    this.glyphBox = [];
+    stage.appendChild(this.glow); stage.appendChild(this.ring); stage.appendChild(this.clover);
+
+    // Nombre: grupos (vuelan) → recorte de cada letra → letra (sube desde su línea base)
+    this.groups = [];
+    if (this.rm) { this.clover.style.opacity = '0'; this.el.appendChild(stage); return; }
+    var word = div('position:absolute;left:0;top:0;width:100%;height:100%');
+    this.groups = GROUPS.map(function (g) {
+      var gb = g.letters.map(function (i) { return lb[i]; }).reduce(union, null);
+      var gv = { x: gb.x + wo[0], y: gb.y + wo[1], w: gb.w, h: gb.h };
+      var ge = div(place({ x: gv.x - PAD, y: gv.y - PAD, w: gv.w + 2 * PAD, h: gv.h + 2 * PAD }, s));
+      var letters = g.letters.map(function (i) {
+        var b = { x: lb[i].x - PAD, y: lb[i].y - PAD, w: lb[i].w + 2 * PAD, h: lb[i].h + 2 * PAD };
+        var clip = div(place({ x: lb[i].x - gb.x, y: lb[i].y - gb.y, w: b.w, h: b.h }, s) + (i === DOT ? '' : 'overflow:hidden'));
+        var inner = div('width:100%;height:100%');
+        inner.innerHTML = glyph(LETTERS[i], b, ink);
+        clip.appendChild(inner); ge.appendChild(clip);
+        return { i: i, el: inner };
+      });
+      word.appendChild(ge);
+      var leaf = self.leaves[g.leaf], a = mid(gv), z = mid(leaf.box);
+      return {
+        el: ge, letters: letters, leaf: leaf, turn: g.turn,
+        dx: (z[0] - a[0]) * s, dy: (z[1] - a[1]) * s,
+        k: Math.sqrt((leaf.box.w * leaf.box.h) / (gv.w * gv.h)) // tamaño de la hoja respecto al grupo
+      };
+    });
+    stage.appendChild(word);
+    this.blur = Math.max(1.2, 6 * s);
+    this.el.appendChild(stage);
+  };
+
+  // Una animación (tiempos en segundos). Sin Web Animations API salta al estado final.
+  Intro.prototype._a = function (el, frames, t) {
+    if (!canAnimate) {
+      var last = frames[frames.length - 1], fake = { cancel: function () {}, onfinish: null };
+      for (var k in last) if (k !== 'offset') el.style[k] = last[k];
+      setTimeout(function () { if (fake.onfinish) fake.onfinish(); }, 0);
+      return fake;
+    }
+    var a = el.animate(frames, {
+      duration: t.dur * 1000, delay: (t.delay || 0) * 1000, easing: t.easing || 'linear',
+      fill: t.fill || 'both', iterations: t.iterations || 1, direction: t.direction || 'normal'
+    });
+    a.playbackRate = this.o.speed;
+    this.anims.push(a);
+    return a;
+  };
+
+  Intro.prototype._play = function () {
     var self = this;
-    this.paths = PLAN.map(function (pl, i) {
-      var rs = rings[i], b = bbox(rs[0]);
-      self.glyphBox[pl.glyph] = self.glyphBox[pl.glyph] ? merge(self.glyphBox[pl.glyph], b) : b;
-      var c0 = [(b.minX + b.maxX) / 2 + wo[0], (b.minY + b.maxY) / 2 + wo[1]];
-      var tgt = pl.primary ? leafLocal[pl.leaf] : insetLocal[pl.leaf];
-      var qc = center(bbox(tgt));
-      var tRel = tgt.map(function (p) { return [p[0] - qc[0], p[1] - qc[1]]; });
-      var tSign = area(tRel) >= 0 ? 1 : -1;
-      var rel = function (p) { return [p[0] + wo[0] - c0[0], p[1] + wo[1] - c0[1]]; };
-      var outer = rs[0].map(rel);
-      if ((area(outer) >= 0 ? 1 : -1) !== tSign) outer.reverse();
-      var data = [{ src: rotateToFit(outer, tRel), tgt: tRel }];
-      for (var h = 1; h < rs.length; h++) {
-        var hole = rs[h].map(rel);
-        if ((area(hole) >= 0 ? 1 : -1) === tSign) hole.reverse(); // sentido opuesto → agujero con nonzero
-        data.push({ src: hole, tgt: null });
-      }
-      return { g: pl.g, glyph: pl.glyph, primary: pl.primary, leaf: pl.leaf, dot: !!pl.dot, c0: c0, qc: qc, rings: data, el: null };
+    this.t0 = performance.now();
+    if (this.rm) { this._a(this.clover, [{ opacity: 0 }, { opacity: 1 }], { dur: RM.fadeIn, easing: EASE.soft }); return; }
+
+    // 1) El nombre sube letra por letra; el punto de la i cae al final
+    this.groups.forEach(function (g) {
+      g.letters.forEach(function (L) {
+        if (L.i === DOT) self._a(L.el, [{ transform: 'translateY(-70%)', opacity: 0 }, { transform: 'translateY(0)', opacity: 1 }], { dur: 0.5, delay: TL.rise + 1.5 * TL.riseStep + 0.16, easing: EASE.drop });
+        else self._a(L.el, [{ transform: 'translateY(112%)' }, { transform: 'translateY(0)' }], { dur: TL.riseDur, delay: TL.rise + RISE_ORDER[L.i] * TL.riseStep, easing: EASE.rise });
+      });
     });
-    meas.parentNode.removeChild(meas);
+
+    // 2) Cada grupo vuela a su hoja y se convierte en ella: en todo momento comparten
+    //    posición y tamaño (y giro en el cruce); solo cambia la silueta, con un desenfoque breve
+    var still = 'translate(0px,0px) rotate(0deg) scale(1)';
+    this.groups.forEach(function (g, n) {
+      var t = { dur: TL.flyDur, delay: TL.fly + n * TL.flyStep, easing: EASE.fly };
+      var to = 'translate(' + px(g.dx) + ',' + px(g.dy) + ') rotate(' + g.turn + 'deg) scale(' + g.k.toFixed(4) + ')';
+      var from = 'translate(' + px(-g.dx) + ',' + px(-g.dy) + ') rotate(' + g.turn + 'deg) scale(' + (1 / g.k).toFixed(4) + ')';
+      var blur = [{ filter: 'blur(0px)' }, { filter: 'blur(' + px(self.blur) + ')', offset: 0.48 }, { filter: 'blur(0px)' }];
+      self._a(g.el, [{ transform: still, opacity: 1, offset: 0 }, { opacity: 1, offset: 0.36 }, { opacity: 0, offset: 0.6 }, { transform: to, opacity: 0, offset: 1 }], t);
+      self._a(g.leaf.el, [{ transform: from, opacity: 0, offset: 0 }, { opacity: 0, offset: 0.36 }, { opacity: 1, offset: 0.6 }, { transform: still, opacity: 1, offset: 1 }], t);
+      self._a(g.el, blur, t);
+      self._a(g.leaf.el, blur, t);
+    });
+
+    // 3) Trébol completo: se asienta, se enciende una luz detrás y se abre un pulso
+    this._a(this.clover, [{ transform: 'scale(1)' }, { transform: 'scale(1.035)', offset: 0.45 }, { transform: 'scale(1)' }], { dur: 0.6, delay: TL.formed - 0.22, easing: EASE.breathe, fill: 'none' });
+    this._a(this.glow, [{ transform: 'scale(.6)', opacity: 0 }, { transform: 'scale(1)', opacity: 1 }], { dur: 0.9, delay: TL.glow, easing: EASE.soft });
+    this._a(this.ring, [{ transform: 'scale(.8)', opacity: 0 }, { opacity: 0.7, offset: 0.12 }, { transform: 'scale(1.9)', opacity: 0 }], { dur: 1.1, delay: TL.ring, easing: EASE.soft });
+
+    // 4) Si la página sigue cargando, el trébol respira. Esta animación también sirve de
+    //    reloj de la intro: marca el mismo tiempo que se ve en pantalla.
+    var loop = { dur: 1.3, delay: TL.hold, iterations: Infinity, direction: 'alternate', easing: EASE.breathe, fill: 'none' };
+    this.breath = [
+      this._a(this.clover, [{ transform: 'scale(1)' }, { transform: 'scale(1.03)' }], loop),
+      this._a(this.glow, [{ opacity: 1 }, { opacity: 0.55 }], loop)
+    ];
+    this.holdTimer = setTimeout(function () { if (self.state === 'playing') self.state = 'holding'; }, TL.hold * 1000 / this.o.speed);
   };
 
-  Intro.prototype._dom = function () {
-    var id = this.id, ink = this.o.ink, bg = this.o.background;
-    var wrap = document.createElement('div');
-    var svg;
+  // Segundos de intro ya reproducidos (en la escala de TL)
+  Intro.prototype._elapsed = function () {
+    var c = this.breath && this.breath[0];
+    if (c && c.currentTime != null) return c.currentTime / 1000;
+    return this.rm ? (performance.now() - this.t0) / 1000 * this.o.speed : 0;
+  };
+
+  Intro.prototype._check = function () {
+    if (!this.isReady || this.state === 'exiting' || this.state === 'done') return;
+    var at = Math.max(this.o.minTime || 0, this.rm ? RM.minHold : TL.formed);
+    var wait = at - this._elapsed();
+    clearTimeout(this.waitTimer);
+    if (wait > 0.001) this.waitTimer = setTimeout(this._check.bind(this), Math.max(16, wait * 1000 / this.o.speed));
+    else this._exit();
+  };
+
+  // 5) Salida: el trébol se adelanta hacia arriba y se desvanece; detrás sube el telón
+  Intro.prototype._exit = function () {
+    var self = this;
+    this.state = 'exiting';
+    clearTimeout(this.holdTimer); clearTimeout(this.maxTimer); clearTimeout(this.waitTimer);
     if (this.rm) {
-      var rmT = this._rmTransform();
-      wrap.innerHTML = '<svg xmlns="' + NS + '" viewBox="0 0 ' + VB.w + ' ' + VB.h + '" aria-hidden="true" focusable="false">' +
-        LEAVES.map(function (d) { return '<path d="' + d + '" fill="' + ink + '" fill-rule="evenodd" transform="' + rmT + '"/>'; }).join('') + '</svg>';
-      svg = wrap.firstElementChild;
-      svg.style.opacity = '0';
-    } else {
-      var T = this.T, wo = this.wordOffset, self = this;
-      var pathTag = function (i) { return '<path id="' + id + '-p' + i + '" d="' + LETTERS[i] + '" fill="' + ink + '" fill-rule="evenodd"' + (PLAN[i].dot ? ' opacity="0"' : '') + '/>'; };
-      wrap.innerHTML =
-        '<svg xmlns="' + NS + '" viewBox="0 0 ' + VB.w + ' ' + VB.h + '" aria-hidden="true" focusable="false">' +
-        '<defs>' +
-          '<linearGradient id="' + id + '-wg" gradientUnits="userSpaceOnUse" x1="' + fmt(this.wb.minX - 300) + '" y1="0" x2="' + fmt(this.wb.minX - 170) + '" y2="0"><stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>' +
-          '<mask id="' + id + '-wm" maskUnits="userSpaceOnUse" x="-4000" y="-4000" width="9000" height="9000"><rect x="-4000" y="-4000" width="9000" height="9000" fill="url(#' + id + '-wg)"/></mask>' +
-          '<clipPath id="' + id + '-cc">' + LEAVES.map(function (d) { return '<path d="' + d + '" transform="' + T + '"/>'; }).join('') + '</clipPath>' +
-          '<linearGradient id="' + id + '-sg" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="1" y2="0">' +
-            '<stop offset="0" stop-color="#ffffff" stop-opacity="0"/>' +
-            '<stop offset="0.3" stop-color="#ffffff" stop-opacity="0.1"/>' +
-            '<stop offset="0.42" stop-color="#ffffff" stop-opacity="0.65"/>' +
-            '<stop offset="0.5" stop-color="#ffffff" stop-opacity="1"/>' +
-            '<stop offset="0.58" stop-color="#ffffff" stop-opacity="0.65"/>' +
-            '<stop offset="0.7" stop-color="#ffffff" stop-opacity="0.1"/>' +
-            '<stop offset="1" stop-color="#ffffff" stop-opacity="0"/>' +
-          '</linearGradient>' +
-          '<linearGradient id="' + id + '-sg2" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="1" y2="0">' +
-            '<stop offset="0" stop-color="#ffffff" stop-opacity="0"/>' +
-            '<stop offset="0.5" stop-color="#ffffff" stop-opacity="0.75"/>' +
-            '<stop offset="1" stop-color="#ffffff" stop-opacity="0"/>' +
-          '</linearGradient>' +
-        '</defs>' +
-        '<g id="' + id + '-word" transform="translate(' + fmt(wo[0]) + ' ' + fmt(wo[1]) + ')">' +
-          '<g id="' + id + '-masked" mask="url(#' + id + '-wm)">' + PLAN.map(function (p, i) { return p.dot ? '' : pathTag(i); }).join('') + '</g>' +
-          PLAN.map(function (p, i) { return p.dot ? pathTag(i) : ''; }).join('') +
-        '</g>' +
-        '<g id="' + id + '-shine" clip-path="url(#' + id + '-cc)" opacity="0">' +
-          '<rect x="0" y="0" width="' + VB.w + '" height="' + VB.h + '" fill="url(#' + id + '-sg)"/>' +
-          '<rect x="0" y="0" width="' + VB.w + '" height="' + VB.h + '" fill="url(#' + id + '-sg2)"/>' +
-        '</g>' +
-        '</svg>';
-      svg = wrap.firstElementChild;
-      this.wipe = svg.querySelector('#' + id + '-wg');
-      this.shineGrad = svg.querySelector('#' + id + '-sg');
-      this.shineGrad2 = svg.querySelector('#' + id + '-sg2');
-      this.shineG = svg.querySelector('#' + id + '-shine');
-      this.wordG = svg.querySelector('#' + id + '-word');
-      this.maskedG = svg.querySelector('#' + id + '-masked');
-      this.paths.forEach(function (p, i) { p.el = svg.querySelector('#' + id + '-p' + i); });
+      this._reveal();
+      this._a(this.el, [{ opacity: 1 }, { opacity: 0 }], { dur: RM.exitDur, easing: EASE.soft, fill: 'forwards' }).onfinish = function () { self._finish(); };
+      return;
     }
-    svg.style.display = 'block';
-    svg.style.width = '72vw';
-    svg.style.width = 'clamp(280px, min(72vw, 118vh), 780px)';
-    svg.style.height = 'auto';
-    svg.style.transformOrigin = '50% 50%';
-    svg.style.willChange = 'transform';
-    this.el.appendChild(svg);
-    this.svg = svg;
+    var sc = scaleOf(this.clover), gl = opacityOf(this.glow);
+    (this.breath || []).forEach(function (a) { a.cancel(); });
+    this.breath = null;
+    var H = this.el.getBoundingClientRect().height + this.tailH + 4;
+    this._a(this.clover, [{ transform: 'translateY(0px) scale(' + sc.toFixed(4) + ')', opacity: 1 }, { transform: 'translateY(' + px(-0.14 * H) + ') scale(.9)', opacity: 0 }], { dur: 0.55, easing: EASE.lift, fill: 'forwards' });
+    this._a(this.glow, [{ opacity: gl }, { opacity: 0 }], { dur: 0.4, easing: EASE.lift, fill: 'forwards' });
+    this._a(this.el, [{ transform: 'translateY(0px)' }, { transform: 'translateY(' + px(-H) + ')' }], { dur: TL.exitDur, delay: 0.08, easing: EASE.curtain, fill: 'forwards' })
+      .onfinish = function () { self._finish(); };
+    this.revealTimer = setTimeout(function () { self._reveal(); }, TL.reveal * 1000 / this.o.speed);
   };
 
-  Intro.prototype._rmTransform = function () {
-    // Transformación del trébol centrado (misma que en la versión completa), sin muestreo
-    var cx = VB.w / 2, cy = VB.h / 2, cc = [233.5, 249.5];
-    return 'translate(' + fmt(cx - K * cc[0]) + ' ' + fmt(cy - K * cc[1]) + ') scale(' + K + ')';
+  // La página ya se empieza a ver: se libera el scroll y arrancan sus animaciones
+  Intro.prototype._reveal = function () {
+    if (this.revealed) return;
+    this.revealed = true;
+    document.documentElement.classList.remove('riffast-intro-active');
+    try { document.dispatchEvent(new CustomEvent('riffast-intro:reveal', { detail: { intro: this } })); } catch (e) {}
   };
 
-  Intro.prototype._start = function () {
-    this.last = performance.now();
-    this.raf = requestAnimationFrame(this._tick);
-  };
-
-  Intro.prototype._tick = function (now) {
-    var dt = Math.min(0.05, (now - this.last) / 1000); // sin saltos al volver de otra pestaña
-    this.last = now;
-    this.t += dt * this.o.speed;
-    this._render(this.t);
-    if (this.state !== 'done') this.raf = requestAnimationFrame(this._tick);
-  };
-
-  Intro.prototype._render = function (t) {
-    if (this.rm) return this._renderReduced(t);
-    if (t < this.tl.reveal) this._reveal(t);
-    else {
-      if (!this.morphing) this._beginMorph();
-      if (!this.settled) this._morph(t);
-    }
-    this._shine(t);
-    this._exitOrHold(t);
-  };
-
-  // 1) El nombre se escribe de izquierda a derecha
-  Intro.prototype._reveal = function (t) {
-    var S = 130, wb = this.wb, tl = this.tl;
-    var p = tl.ease.reveal(t / tl.reveal);
-    var X = (wb.minX - S) + ((wb.maxX + 6) - (wb.minX - S)) * p;
-    this.wipe.setAttribute('x1', fmt(X)); this.wipe.setAttribute('x2', fmt(X + S));
-    var gb = this.glyphBox;
-    for (var i = 0; i < this.paths.length; i++) {
-      var P = this.paths[i], g = gb[P.glyph];
-      var local = clamp01((X - (g.minX - S)) / (g.maxX - g.minX + S));
-      if (P.dot) { // el punto cae sobre la i cuando el asta ya está a medio revelar
-        var pd = clamp01((local - 0.3) / 0.5), e = tl.ease.riseE(pd);
-        P.el.setAttribute('opacity', fmt(clamp01(pd * 1.8)));
-        P.el.setAttribute('transform', 'translate(0 ' + fmt(-16 * (1 - e)) + ')');
-      } else {
-        var rise = tl.rise * (1 - tl.ease.riseE(local));
-        P.el.setAttribute('transform', rise > 0.05 ? 'translate(0 ' + fmt(rise) + ')' : '');
-      }
-    }
-  };
-
-  Intro.prototype._beginMorph = function () {
-    this.morphing = true;
-    this.wordG.removeAttribute('transform');
-    this.maskedG.removeAttribute('mask');
-    for (var i = 0; i < this.paths.length; i++) {
-      var el = this.paths[i].el;
-      el.removeAttribute('transform'); el.setAttribute('opacity', '1'); el.setAttribute('fill-rule', 'nonzero');
-    }
-  };
-
-  // 2) Las letras se acercan, se desplazan a la izquierda y se convierten en el trébol
-  Intro.prototype._morph = function (t) {
-    var tl = this.tl;
-    var w = tl.ease.recenter(win(t, tl.recenter[0], tl.recenter[1]));
-    var Cx = this.Cleft[0] + (this.Cfinal[0] - this.Cleft[0]) * w, Cy = this.Cfinal[1];
-    var done = w >= 1;
-    for (var i = 0; i < this.paths.length; i++) {
-      var P = this.paths[i], st = P.g * tl.stagger;
-      var v = tl.ease.move(win(t, tl.gather[0] + st, tl.gather[1] + st));
-      var uw = P.primary ? tl.morph : tl.absorb;
-      var u = tl.ease.shape(win(t, uw[0] + st, uw[1] + st));
-      if (v < 1 || u < 1) done = false;
-      var px = P.c0[0] + (Cx + P.qc[0] - P.c0[0]) * v, py = P.c0[1] + (Cy + P.qc[1] - P.c0[1]) * v;
-      var uh = clamp01(u / 0.5); // los agujeros (R, a) se cierran antes de acabar
-      var sm = Math.round(tl.smooth * Math.sin(Math.PI * u)); // a mitad de camino las formas son más orgánicas
-      var d = '';
-      for (var r = 0; r < P.rings.length; r++) {
-        var src = P.rings[r].src, tgt = P.rings[r].tgt, n = src.length, xs = new Array(n), ys = new Array(n);
-        for (var k = 0; k < n; k++) {
-          var a = src[k];
-          if (tgt) { var b = tgt[k]; xs[k] = px + a[0] + (b[0] - a[0]) * u; ys[k] = py + a[1] + (b[1] - a[1]) * u; }
-          else { xs[k] = px + a[0] * (1 - uh); ys[k] = py + a[1] * (1 - uh); }
-        }
-        if (tgt && sm > 0) { var o = boxSmooth(xs, ys, sm); xs = o[0]; ys = o[1]; }
-        var s = '';
-        for (var q = 0; q < n; q++) s += (q ? 'L' : 'M') + xs[q].toFixed(1) + ' ' + ys[q].toFixed(1);
-        d += s + 'Z';
-      }
-      P.el.setAttribute('d', d);
-    }
-    if (done) this._settle();
-  };
-
-  Intro.prototype._settle = function () { // trazados exactos del trébol original
-    this.settled = true;
-    for (var i = 0; i < this.paths.length; i++) {
-      var P = this.paths[i];
-      if (P.primary) { P.el.setAttribute('d', LEAVES[P.leaf]); P.el.setAttribute('transform', this.T); P.el.setAttribute('fill-rule', 'evenodd'); }
-      else P.el.setAttribute('display', 'none');
-    }
-  };
-
-  // 3) Reflejo diagonal recortado dentro del trébol: un haz principal nítido y, detrás,
-  //    un segundo haz fino y más tenue, como el doble reflejo de una superficie pulida
-  Intro.prototype._shine = function (t) {
-    var a = this.tl.shine[0], b = this.tl.shine[1];
-    if (t < a || t > b) { if (this.shineOn) { this.shineG.setAttribute('opacity', '0'); this.shineOn = false; } return; }
-    if (!this.shineOn) { this.shineG.setAttribute('opacity', '1'); this.shineOn = true; }
-    var p = this.tl.ease.shine(win(t, a, b));
-    var W = 240, th = 24 * Math.PI / 180, dx = Math.cos(th), dy = Math.sin(th);
-    var box = this.cloverBox, reach = Math.tan(th) * (box.maxY - box.minY) / 2;
-    var from = box.minX - W / 2 - reach, to = box.maxX + W / 2 + reach;
-    var cx = from + (to - from) * p, cy = this.Cfinal[1];
-    var set = function (g, c, w) {
-      g.setAttribute('x1', fmt(c - dx * w / 2)); g.setAttribute('y1', fmt(cy - dy * w / 2));
-      g.setAttribute('x2', fmt(c + dx * w / 2)); g.setAttribute('y2', fmt(cy + dy * w / 2));
-    };
-    set(this.shineGrad, cx, W);
-    set(this.shineGrad2, cx - 70, 34);
-  };
-
-  // 4) Salida coordinada, o respiración mientras la página termina de cargar
-  Intro.prototype._exitOrHold = function (t) {
-    var tl = this.tl;
-    if (this.exitStart === null) {
-      if (this.isReady && t >= this.o.minTime) { this.exitStart = t; this.exitFrom = this.scale; this.state = 'exiting'; }
-      else if (t >= tl.exitAt) {
-        this.state = 'holding';
-        var u = (t - tl.exitAt) / BREATH.period;
-        this.scale = 1 + BREATH.amp * 0.5 * (1 - Math.cos(2 * Math.PI * u));
-        this.svg.style.transform = 'scale(' + this.scale.toFixed(4) + ')';
-        return;
-      } else return;
-    }
-    var e = tl.ease.exit(win(t, this.exitStart, this.exitStart + tl.exitDur));
-    this.scale = this.exitFrom + (tl.exitScale - this.exitFrom) * e;
-    this.svg.style.transform = 'scale(' + this.scale.toFixed(4) + ')';
-    this.el.style.opacity = (1 - e).toFixed(3);
-    if (e >= 1) this._finish();
-  };
-
-  Intro.prototype._renderReduced = function (t) {
-    this.svg.style.opacity = eOutCubic(win(t, 0, RM.fadeIn)).toFixed(3);
-    if (this.exitStart === null) {
-      if (this.isReady && t >= RM.minHold) { this.exitStart = t; this.state = 'exiting'; }
-      else { this.state = t >= RM.minHold ? 'holding' : 'playing'; return; }
-    }
-    var e = eInOutSine(win(t, this.exitStart, this.exitStart + RM.exitDur));
-    this.el.style.opacity = (1 - e).toFixed(3);
-    if (e >= 1) this._finish();
+  Intro.prototype._clear = function () {
+    clearTimeout(this.holdTimer); clearTimeout(this.maxTimer); clearTimeout(this.waitTimer); clearTimeout(this.revealTimer);
+    this.anims.forEach(function (a) { a.cancel(); });
+    this.anims = []; this.breath = null;
   };
 
   Intro.prototype._finish = function () {
+    if (this.state === 'done') return;
+    this._reveal();
     this.state = 'done';
-    cancelAnimationFrame(this.raf);
-    clearTimeout(this.maxTimer);
-    document.documentElement.classList.remove('riffast-intro-active');
+    this._clear();
     if (this.o.removeOnDone && this.el.parentNode) this.el.parentNode.removeChild(this.el);
     else this.el.style.display = 'none';
     try { document.dispatchEvent(new CustomEvent('riffast-intro:done', { detail: { intro: this } })); } catch (e) {}
@@ -488,26 +382,26 @@
   };
 
   // ---- API pública -----------------------------------------------------------
-  Intro.prototype.ready = function () { this.isReady = true; return this; };
+  Intro.prototype.ready = function () { this.isReady = true; this._check(); return this; };
 
   Intro.prototype.replay = function (opts) { // solo para demostraciones
     var keepReady = opts && opts.keepReady;
-    cancelAnimationFrame(this.raf);
-    if (this.svg && this.svg.parentNode) this.svg.parentNode.removeChild(this.svg);
-    this.t = 0; this.scale = 1; this.exitStart = null; this.exitFrom = 1;
-    this.morphing = false; this.settled = false; this.shineOn = false; this.state = 'playing';
+    this._clear();
+    if (this.stage && this.stage.parentNode) this.stage.parentNode.removeChild(this.stage);
+    if (this.tail && this.tail.parentNode) this.tail.parentNode.removeChild(this.tail);
+    this.state = 'playing'; this.revealed = false;
     if (!keepReady) this.isReady = false;
     if (!this.el.parentNode) (document.body || document.documentElement).appendChild(this.el);
-    this.el.style.display = 'flex'; this.el.style.opacity = '1';
-    this._dom();
+    this.el.style.display = 'flex'; this.el.style.opacity = '1'; this.el.style.transform = 'none';
+    this._build();
     document.documentElement.classList.add('riffast-intro-active');
-    this._start();
+    this._play();
+    if (this.isReady) this._check();
     return this;
   };
 
   Intro.prototype.destroy = function () {
-    cancelAnimationFrame(this.raf);
-    clearTimeout(this.maxTimer);
+    this._clear();
     this.state = 'done';
     document.documentElement.classList.remove('riffast-intro-active');
     if (this.created) { if (this.el.parentNode) this.el.parentNode.removeChild(this.el); }
@@ -529,5 +423,5 @@
     return new Intro(o);
   }
 
-  global.RiffastIntro = { mount: mount, presets: PRESETS, version: '1.1.0' };
+  global.RiffastIntro = { mount: mount, timeline: TL, version: '2.0.0' };
 })(typeof window !== 'undefined' ? window : this);

@@ -24,7 +24,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <!-- La intro se descarga en paralelo desde el primer momento -->
-<link rel="preload" as="script" href="riffast-intro.js?v=1.1.0">
+<link rel="preload" as="script" href="riffast-intro.js?v=2.0.0">
 <link rel="preload" as="image" href="assets/shot-rifa-1.webp" fetchpriority="high">
 <!-- Tipografías sin bloquear el arranque: la intro tapa la página hasta que ya cargaron -->
 <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@100..125,600..900&family=Geist:wght@400..800&family=Geist+Mono:wght@400..600&display=swap" onload="this.onload=null;this.rel='stylesheet'">
@@ -658,7 +658,7 @@ html.riffast-intro-active,html.riffast-intro-active body{overflow:hidden}
 <body>
 <!-- Intro: el nombre se convierte en trébol mientras la página carga -->
 <div id="riffast-intro" style="position:fixed;inset:0;z-index:9999;background:#008B5A"></div>
-<script src="riffast-intro.js?v=1.1.0"></script>
+<script src="riffast-intro.js?v=2.0.0"></script>
 <script>
 (function () {
   var root = document.documentElement, done = false;
@@ -683,8 +683,8 @@ html.riffast-intro-active,html.riffast-intro-active body{overflow:hidden}
   })();
   try {
     window.scrollTo(0, 0);
-    // minTime 1.5: sale justo cuando se forma el trébol (sin esperar el brillo final)
-    var intro = window.RiffastIntro.mount({ container: '#riffast-intro', ink: '#FFFFFF', autoReady: false, minTime: 1.5, maxWait: 6 });
+    // Sale en cuanto se forma el trébol (~1.4 s) si la página ya cargó; si no, el trébol respira
+    var intro = window.RiffastIntro.mount({ container: '#riffast-intro', ink: '#FFFFFF', autoReady: false, maxWait: 6 });
     // Sale cuando ya cargaron imágenes y tipografías. Las tipografías se piden de forma explícita
     // porque su hoja de estilos ya no bloquea el arranque.
     var loaded = new Promise(function (r) { if (document.readyState === 'complete') r(); else window.addEventListener('load', r, { once: true }); });
@@ -1251,10 +1251,16 @@ html.riffast-intro-active,html.riffast-intro-active body{overflow:hidden}
     if (!wall || !sec || !('IntersectionObserver' in window)) { if (wall) wall.start(); return; }
     new IntersectionObserver(function (es) { es.forEach(function (e) { e.isIntersecting ? wall.start() : wall.stop(); }); }, { threshold: 0.05 }).observe(sec);
   }
-  // El inicio arranca cuando termina la intro (o de inmediato si no hay intro)
+  // El inicio arranca cuando la intro empieza a descubrir la página (o de inmediato si no hay intro)
   function afterIntro(fn) {
     if (!document.documentElement.classList.contains('riffast-intro-active')) { fn(); return; }
-    document.addEventListener('riffast-intro:done', function () { fn(); }, { once: true });
+    var once = function () {
+      document.removeEventListener('riffast-intro:reveal', once);
+      document.removeEventListener('riffast-intro:done', once);
+      fn();
+    };
+    document.addEventListener('riffast-intro:reveal', once);
+    document.addEventListener('riffast-intro:done', once);
   }
   var heroWall = buildWall($('#wall'), 16 * 18);
   afterIntro(function () { wallWhenVisible('inicio', heroWall); });
